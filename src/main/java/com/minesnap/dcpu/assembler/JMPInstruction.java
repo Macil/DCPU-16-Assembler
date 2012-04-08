@@ -16,6 +16,8 @@ public class JMPInstruction implements Resolvable {
         return data;
     }
 
+    private final static int maxliteral = 0x1f;
+
     @Override
     public void evaluateLabels(Map<String, Integer> labelValues, int position)
         throws SymbolLookupError {
@@ -27,18 +29,27 @@ public class JMPInstruction implements Resolvable {
             // JMP to the next instruction is NOP so don't do
             // anything.
             realInstruction = null;
-        } else if(delta > 0 && delta <= 0x1f) {
-            realInstruction = new Instruction(Opcode.ADD);
-            realInstruction.setValueA(new Value(ValueType.PC));
-            realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(delta)));
-        } else if(delta < 0 && delta >= -0x1f) {
-            realInstruction = new Instruction(Opcode.SUB);
-            realInstruction.setValueA(new Value(ValueType.PC));
-            realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(-delta)));
         } else {
-            realInstruction = new Instruction(Opcode.SET);
-            realInstruction.setValueA(new Value(ValueType.PC));
-            realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(dest)));
+            // Prefer using SET with a short form literal if possible
+            // as it takes the fewest cycles. If we can't use the
+            // short forms of ADD or SUB, then use SET.
+            if(dest <= maxliteral || delta > maxliteral || delta < -maxliteral) {
+                realInstruction = new Instruction(Opcode.SET);
+                realInstruction.setValueA(new Value(ValueType.PC));
+                realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(dest)));
+            } else if(delta > 0) {
+                assert(delta <= maxliteral);
+                realInstruction = new Instruction(Opcode.ADD);
+                realInstruction.setValueA(new Value(ValueType.PC));
+                realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(delta)));
+            } else if(delta < 0) {
+                assert(-delta <= maxliteral);
+                realInstruction = new Instruction(Opcode.SUB);
+                realInstruction.setValueA(new Value(ValueType.PC));
+                realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(-delta)));
+            } else {
+                throw new IllegalStateException("This shouldn't happen");
+            }
         }
     }
 
