@@ -8,7 +8,7 @@ import java.nio.charset.Charset;
 import java.util.Scanner;
 import java.util.List;
 import java.util.Map;
-import java.util.Iterator;
+import java.util.ListIterator;
 
 public class Assembler {
     public static void main(String[] args) {
@@ -43,16 +43,27 @@ public class Assembler {
         throws FileNotFoundException, CompileError, IOException {
         Scanner sc = new Scanner(new File(filename), "UTF-8");
         List<Token> tokens = ASMTokenizer.tokenize(sc, filename);
+        sc.close();
         ResolverList resolvables = new ResolverList();
-        Iterator<Token> tokensI = tokens.listIterator();
+        ListIterator<Token> tokensI = tokens.listIterator();
+        boolean newlineRequired = false;
         while(tokensI.hasNext()) {
             Token opToken = tokensI.next();
-            if(opToken.getValue().equals("\n"))
-                continue;
 
+            if(opToken.getValue().equals("\n")) {
+                newlineRequired = false;
+                continue;
+            }
+
+            // Handle labels
             String opterm = opToken.getValue().toUpperCase();
-            if(opterm.charAt(0)==':') {
-                String label = opterm.substring(1);
+            if(opterm.charAt(0)==':' || opterm.charAt(opterm.length()-1)==':') {
+                String label;
+                if(opterm.charAt(0)==':')
+                    label = opterm.substring(1);
+                else
+                    label = opterm.substring(0, opterm.length()-1);
+
                 try {
                     resolvables.addLabel(label);
                 } catch (LabelAlreadyExistsError e) {
@@ -60,6 +71,13 @@ public class Assembler {
                 }
                 continue;
             }
+
+            // A newline is required after an instruction before
+            // another instruction can be read.
+            if(newlineRequired) {
+                throw new TokenCompileError("Expected newline", opToken);
+            }
+            newlineRequired = true;
 
             Opcode opcode;
             try {
@@ -74,10 +92,14 @@ public class Assembler {
                 while(tokensI.hasNext()) {
                     if(!isFirst) {
                         Token comma = tokensI.next();
-                        if(comma.getValue().equals("\n"))
+                        if(comma.getValue().equals("\n")) {
+                            // Put the newline back so that way it's
+                            // detected later properly.
+                            tokensI.previous();
                             break;
-                        else if(!comma.getValue().equals(","))
+                        } else if(!comma.getValue().equals(",")) {
                             throw new TokenCompileError("Expected comma", comma);
+                        }
                     } else {
                         isFirst = false;
                     }
@@ -118,19 +140,22 @@ public class Assembler {
     }
 
     // Returns the value that must be passed to Instruction.setValueA or B
-    private static Value parseValueTokens(Iterator<Token> tokensI)
+    private static Value parseValueTokens(ListIterator<Token> tokensI)
         throws TokenCompileError {
         Token first = tokensI.next();
         if(!first.getValue().equals("[")) {
             if(is_digit(first.getValue().charAt(0))) {
+                // We're processing something like "3"
                 return new Value(ValueType.LITERAL, new UnresolvedData(parseIntToken(first)));
             } else {
                 String firstS = first.getValue().toUpperCase();
                 try {
+                    // We're processing something like "B"
                     ValueType type = ValueType.valueOf(firstS);
                     return new Value(type);
                 } catch (IllegalArgumentException e) {
-                    return new Value(ValueType.LITERAL, new UnresolvedData(firstS));
+                    // Wait, we're processing something like "somelabel"
+                    return new Value(ValueType.LITERAL, parseLabelToken(first));
                 }
             }
         } else {
@@ -139,10 +164,10 @@ public class Assembler {
                 int number = parseIntToken(second);
                 Token third = tokensI.next();
                 if(third.getValue().equals("]")) {
-                    // We're processing something like [3]
+                    // We're processing something like "[3]"
                     return new Value(ValueType.DN, new UnresolvedData(number));
                 } else if(third.getValue().equals("+")) {
-                    // We're processing something like [3+B]
+                    // We're processing something like "[3+B]"
                     Token fourth = tokensI.next();
                     String fourthS = fourth.getValue().toUpperCase();
                     ValueType type = ValueType.valueOf(fourthS).dereferenceNextPlus();
@@ -155,15 +180,13 @@ public class Assembler {
                 }
             } else {
                 ValueType type;
-                ValueType register = null;
                 UnresolvedData data = null;
                 String secondS = second.getValue().toUpperCase();
                 try {
-                    register = ValueType.valueOf(secondS);
-                    type = register.dereference();
+                    type = ValueType.valueOf(secondS).dereference();
                 } catch (IllegalArgumentException e) {
                     type = ValueType.DN;
-                    data = new UnresolvedData(secondS);
+                    data = parseLabelToken(second);
                 }
                 Token third = tokensI.next();
                 if(third.getValue().equals("]")) {
@@ -172,15 +195,15 @@ public class Assembler {
                     Token fourth = tokensI.next();
                     String fourthS = fourth.getValue().toUpperCase();
                     if(data == null) {
-                        // We're processing something like [B+3] or [B+somelabel]
-                        type = register.dereferenceNextPlus();
+                        // We're processing something like "[B+3]" or "[B+somelabel]"
+                        type = ValueType.valueOf(secondS).dereferenceNextPlus();
                         if(is_digit(fourthS.charAt(0))) {
                             data = new UnresolvedData(parseIntToken(fourth));
                         } else {
-                            data = new UnresolvedData(fourthS);
+                            data = parseLabelToken(fourth);
                         }
                     } else {
-                        // We're processing something like [somelabel+B]
+                        // We're processing something like "[somelabel+B]"
                         type = ValueType.valueOf(fourthS).dereferenceNextPlus();
                     }
                     Token close = tokensI.next();
@@ -198,6 +221,15 @@ public class Assembler {
     private static final String digits = "0123456789";
     private static boolean is_digit(char c) {
         return digits.indexOf(c) != -1;
+    }
+
+    private static UnresolvedData parseLabelToken(Token token)
+        throws TokenCompileError {
+        String tokenS = token.getValue();
+        if(tokenS.equals("\n")) {
+            throw new TokenCompileError("Was not expecting newline", token);
+        }
+        return new UnresolvedData(tokenS);
     }
 
     private static int parseIntToken(Token token)
