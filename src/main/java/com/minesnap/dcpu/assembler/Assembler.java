@@ -13,13 +13,13 @@ import java.util.ListIterator;
 
 public class Assembler {
     public static void main(String[] args) {
-        boolean optimization = true;
+        boolean optimize = true;
         List<String> argsList = new ArrayList<String>(2);
         for(int i=0; i<args.length; i++) {
             switch(args[i].charAt(0)) {
             case '-':
                 if(args[i].equals("--no-optimization")) {
-                    optimization = false;
+                    optimize = false;
                 } else if(args[i].equals("-h") || args[i].equals("--help")) {
                     usage();
                     return;
@@ -48,7 +48,7 @@ public class Assembler {
             outname = argsList.get(1);
 
         try {
-            assemble(filename, outname);
+            assemble(filename, outname, optimize);
         } catch (FileNotFoundException e) {
             System.err.println("Error: Could not find file "+filename);
             System.exit(2);
@@ -62,7 +62,7 @@ public class Assembler {
         System.out.println("Successfully compiled "+filename+" to "+outname);
     }
 
-    public static void assemble(String filename, String outname)
+    public static void assemble(String filename, String outname, boolean optimize)
         throws FileNotFoundException, CompileError, IOException {
         Scanner sc = new Scanner(new File(filename), "UTF-8");
         List<Token> tokens = ASMTokenizer.tokenize(sc, filename);
@@ -181,7 +181,22 @@ public class Assembler {
                         throw new TokenCompileError("Expected comma", comma);
                     instr.setValueB(parseValueTokens(tokensI));
                 }
-                resolvables.add(instr);
+                if(optimize) {
+                    if(instr.getOpcode() == Opcode.SET
+                       && instr.getValueA().getType() == ValueType.PC
+                       && instr.getValueB().getType() == ValueType.LITERAL) {
+                        UnresolvedData data = instr.getValueB().getData();
+                        JMPInstruction jmp = new JMPInstruction(data);
+                        resolvables.add(jmp);
+                        instr = null;
+                    }
+                }
+                // This will be null if we replaced this with an
+                // optimized instruction and that means we've already
+                // added the optimized version.
+                if(instr != null) {
+                    resolvables.add(instr);
+                }
             }
             }
         }
