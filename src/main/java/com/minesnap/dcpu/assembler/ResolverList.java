@@ -130,8 +130,6 @@ public class ResolverList {
         if(needDoOver) {
             wordPosition = newWordPosition;
             evaluateRefs();
-        } else {
-            assert(newWordPosition == wordPosition);
         }
     }
 
