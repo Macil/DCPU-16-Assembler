@@ -44,6 +44,15 @@ public class ResolverList {
         public void setPosition(int position) {
             this.position = position;
         }
+        @Override
+        public String toString() {
+            String content;
+            if(resolvable != null)
+                content = resolvable.toString();
+            else
+                content = label;
+            return Integer.toString(position)+": "+content;
+        }
     }
 
     public ResolverList() {
@@ -100,9 +109,12 @@ public class ResolverList {
         int newWordPosition = 0;
         for(PositionedResolvable pr : resolvablesList) {
             int oldWordPosition = pr.getPosition();
+            pr.setPosition(newWordPosition);
             if(oldWordPosition != newWordPosition)
                 needDoOver = true;
-            pr.setPosition(newWordPosition);
+            // Don't break now for the do-over immediately because we
+            // still want to update the positions so that the labels
+            // are more correct.
 
             Resolvable r = pr.getResolvable();
             if(r != null) {
