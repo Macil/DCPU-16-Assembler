@@ -10,6 +10,11 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+  <scm>
+    <connection>scm:git:git://github.com:AgentME/DCPU-16-Assembler.git</connection>
+    <url>https://github.com/AgentME/DCPU-16-Assembler</url>
+    <developerConnection>scm:git:git@github.com:AgentME/DCPU-16-Assembler.git</developerConnection>
+  </scm>
   <build>
     <finalName>${project.name}</finalName>
     <plugins>
@@ -51,6 +56,10 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.2</version>
       </plugin>
     </plugins>
   </build>
