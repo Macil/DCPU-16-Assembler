@@ -37,7 +37,7 @@ public class UnresolvedData implements Resolvable {
     }
 
     @Override
-    public void evaluateLabels(Map<String, Integer> labelValues)
+    public void evaluateLabels(Map<String, Integer> labelValues, int position)
         throws SymbolLookupError {
         if(reference != null) {
             Integer value = labelValues.get(reference);

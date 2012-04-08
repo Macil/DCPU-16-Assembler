@@ -96,35 +96,30 @@ public class ResolverList {
         throws SymbolLookupError {
         Map<String, Integer> labelValues = getLabelValues();
 
+        boolean needDoOver = false;
         int newWordPosition = 0;
         for(PositionedResolvable pr : resolvablesList) {
+            int oldWordPosition = pr.getPosition();
+            if(oldWordPosition != newWordPosition)
+                needDoOver = true;
             pr.setPosition(newWordPosition);
 
             Resolvable r = pr.getResolvable();
             if(r != null) {
-                r.evaluateLabels(labelValues);
+                r.evaluateLabels(labelValues, newWordPosition);
                 newWordPosition += r.wordCount();
             }
         }
         
-        // Did we come up with more words than last time? If so, some
-        // of the labels may have different values now, so we need to
-        // repeat this until our final wordPosition is the same as it
-        // was when we first ran updateLabelValues().
-        if(newWordPosition != wordPosition) {
-            // Note that we started out assuming the best case
-            // scenario (all resolvables return the smallest possible
-            // wordCount() before the labels are evaluated), so the
-            // final wordPosition value can only get larger. This
-            // means we don't have to worry at all about the
-            // possibility that some resolvables got smaller and
-            // cancelled out with the ones that got bigger and we
-            // deceptively ended up with the same wordPosition value
-            // but changed some of the label values.
-            assert(newWordPosition > wordPosition);
-
+        // Did some instructions get moved during this last loop? If
+        // so, we need to repeat this until the final positions are
+        // the same as their values were when we first ran
+        // updateLabelValues().
+        if(needDoOver) {
             wordPosition = newWordPosition;
             evaluateRefs();
+        } else {
+            assert(newWordPosition == wordPosition);
         }
     }
 

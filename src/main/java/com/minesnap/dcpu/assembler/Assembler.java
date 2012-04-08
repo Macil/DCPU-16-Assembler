@@ -135,7 +135,17 @@ public class Assembler {
             }
             case JMP:
             {
-                throw new UnsupportedOperationException("JMP not implemented yet");
+                Token next = tokensI.next();
+                String nextS = next.getValue();
+                UnresolvedData data;
+                if(is_digit(nextS.charAt(0))) {
+                    data = new UnresolvedData(parseIntToken(next));
+                } else {
+                    data = parseLabelToken(next);
+                }
+                JMPInstruction jmp = new JMPInstruction(data);
+                resolvables.add(jmp);
+                break;
             }
             default:
             {
@@ -152,7 +162,7 @@ public class Assembler {
             }
             }
         }
-	resolvables.prepare();
+        resolvables.prepare();
         FileOutputStream out = new FileOutputStream(new File(outname), false);
         resolvables.writeTo(out);
         out.close();

@@ -41,12 +41,12 @@ public class Instruction implements Resolvable {
     }
 
     @Override
-    public void evaluateLabels(Map<String, Integer> labelValues)
+    public void evaluateLabels(Map<String, Integer> labelValues, int position)
         throws SymbolLookupError {
         if(valueA.getData() != null)
-            valueA.getData().evaluateLabels(labelValues);
+            valueA.getData().evaluateLabels(labelValues, position);
         if(opcode.isBasic() && valueB.getData() != null)
-            valueB.getData().evaluateLabels(labelValues);
+            valueB.getData().evaluateLabels(labelValues, position);
     }
 
     @Override
