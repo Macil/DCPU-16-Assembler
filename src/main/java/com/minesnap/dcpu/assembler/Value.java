@@ -34,7 +34,9 @@ public class Value {
         // data will be small enough to fit in the current word.
         if(data == null)
             return false;
-        return data.getUnresolvedWord() > 0x1f;
+        if(type == ValueType.LITERAL)
+            return data.getUnresolvedWord() > 0x1f;
+        return true;
     }
 
     public byte evaluate() {
