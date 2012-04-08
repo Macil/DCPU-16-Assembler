@@ -8,19 +8,26 @@ import java.nio.charset.Charset;
 import java.util.Scanner;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.Iterator;
 
 public class Assembler {
     public static void main(String[] args) {
-        if(args.length != 1) {
+        if(args.length < 1 || args.length > 2) {
             usage();
             System.exit(1);
         }
+
+        String filename = args[0];
+        String outname;
+        if(args.length < 2)
+            outname = "a.out";
+        else
+            outname = args[1];
+
         try {
-            assemble(args[0], "a.out");
+            assemble(filename, outname);
         } catch (FileNotFoundException e) {
-            System.err.println("Error: Could not find file "+args[0]);
+            System.err.println("Error: Could not find file "+filename);
             System.exit(2);
         } catch (CompileError e) {
             System.err.println("Compile Error: "+e.getMessage());
@@ -29,6 +36,7 @@ public class Assembler {
             System.err.println(e);
             System.exit(5);
         }
+        System.out.println("Successfully compiled "+filename+" to "+outname);
     }
 
     public static void assemble(String filename, String outname)
@@ -100,7 +108,6 @@ public class Assembler {
                         throw new TokenCompileError("Expected comma", comma);
                     instr.setValueB(parseValueTokens(tokensI));
                 }
-                System.out.println(instr);
                 resolvables.add(instr);
             }
         }
@@ -207,6 +214,6 @@ public class Assembler {
     }
 
     public static void usage() {
-        System.out.println("Parameters: FILE");
+        System.out.println("Parameters: INPUTFILENAME [OUTPUTFILENAME]");
     }
 }
