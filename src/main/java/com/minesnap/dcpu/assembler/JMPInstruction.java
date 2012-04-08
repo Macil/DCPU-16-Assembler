@@ -23,7 +23,6 @@ public class JMPInstruction implements Resolvable {
         int dest = data.getUnresolvedWord();
         int delta = dest - (position+wordCount());
 
-        System.out.println("delta = "+delta);
         if(delta == 0) {
             // JMP to the next instruction is NOP so don't do
             // anything.
