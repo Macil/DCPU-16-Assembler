@@ -18,7 +18,7 @@ public class Assembler {
         for(int i=0; i<args.length; i++) {
             switch(args[i].charAt(0)) {
             case '-':
-                if(args[i].equals("--no-optimization")) {
+                if(args[i].equals("--no-optimizations")) {
                     optimize = false;
                 } else if(args[i].equals("-h") || args[i].equals("--help")) {
                     usage();
