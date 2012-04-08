@@ -29,23 +29,20 @@ public class Value {
     }
 
     public boolean hasNextWord() {
-        // If the data is a reference or has a value above 0x1f, then
-        // the answer is yes. We need to be able to decide whether or
-        // not this Value will use the next word before we can resolve
-        // address symbols, so unresolved symbols are forced into
-        // their own word regardless of whether they end up being
-        // small enough to be in the current word.
+        // If the data is not null and has a value above 0x1f, then
+        // the answer is yes. Note that it's assumed that unresolved
+        // data will be small enough to fit in the current word.
         if(data == null)
             return false;
-        if(data.getReference() != null)
-            return true;
         return data.getUnresolvedWord() > 0x1f;
     }
 
-    public byte evaluate() {
+    public byte evaluate()
+        throws SymbolLookupError {
         if(!type.hasLiteral()) {
             return type.getCode();
         } else {
+            data.checkResolved();
             if(hasNextWord()) {
                 return type.getCode();
             } else {
@@ -53,5 +50,10 @@ public class Value {
                 return (byte)(0x20+data.getUnresolvedWord());
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return type.toString();
     }
 }

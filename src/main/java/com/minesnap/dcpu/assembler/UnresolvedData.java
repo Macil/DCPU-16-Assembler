@@ -3,10 +3,13 @@ package com.minesnap.dcpu.assembler;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
 
 // Contains either a 16-bit word of data, or a symbol reference.
 public class UnresolvedData implements Resolvable {
-    private final int word;
+    private Integer word;
     private final String reference;
 
     public UnresolvedData(int word) {
@@ -18,11 +21,14 @@ public class UnresolvedData implements Resolvable {
     }
 
     public UnresolvedData(String reference) {
-        this.word = 0;
+        this.word = null;
         this.reference = reference.toUpperCase();
     }
 
+    // The word may or may not be resolved yet.
     public int getUnresolvedWord() {
+        if(word == null)
+            return 0;
         return word;
     }
 
@@ -30,14 +36,13 @@ public class UnresolvedData implements Resolvable {
         return reference;
     }
 
-    public int evaluate(Map<String, Integer> refmap)
-        throws SymbolLookupError {
-        if(reference == null)
-            return word;
-        Integer ref = refmap.get(reference);
-        if(ref == null)
-            throw new SymbolLookupError(reference);
-        return ref;
+    @Override
+    public void evaluateLabels(Map<String, Integer> labelValues) {
+        if(reference != null) {
+            Integer value = labelValues.get(reference);
+            if(value != null)
+                this.word = value;
+        }
     }
 
     // Note that this isn't accurate for instances owned by Value
@@ -47,11 +52,18 @@ public class UnresolvedData implements Resolvable {
         return 1;
     }
 
+    public boolean checkResolved()
+        throws SymbolLookupError {
+        if(word == null)
+            throw new SymbolLookupError(reference);
+        return true;
+    }
+
     @Override
-    public void writeTo(OutputStream out, Map<String, Integer> refmap)
+    public void writeTo(OutputStream out)
         throws SymbolLookupError, IOException {
-        int resolved = evaluate(refmap);
-        out.write(resolved & 0x00ff);
-        out.write((resolved & 0xff00) >> 8);
+        checkResolved();
+        out.write(word & 0x00ff);
+        out.write((word & 0xff00) >> 8);
     }
 }

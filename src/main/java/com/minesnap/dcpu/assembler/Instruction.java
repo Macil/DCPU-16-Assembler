@@ -41,6 +41,14 @@ public class Instruction implements Resolvable {
     }
 
     @Override
+    public void evaluateLabels(Map<String, Integer> labelValues) {
+        if(valueA.getData() != null)
+            valueA.getData().evaluateLabels(labelValues);
+        if(opcode.isBasic() && valueB.getData() != null)
+            valueB.getData().evaluateLabels(labelValues);
+    }
+
+    @Override
     public int wordCount() {
         int count = 1;
         if(valueA.hasNextWord())
@@ -51,7 +59,7 @@ public class Instruction implements Resolvable {
     }
 
     @Override
-    public void writeTo(OutputStream out, Map<String, Integer> refmap)
+    public void writeTo(OutputStream out)
         throws SymbolLookupError, IOException {
         int opword = opcode.getCode();
         if(opcode.isBasic()) {
@@ -59,22 +67,21 @@ public class Instruction implements Resolvable {
         } else {
             opword |= (valueA.evaluate() << 10);
         }
+
         out.write(opword & 0x00ff);
         out.write((opword & 0xff00) >> 8);
-        if(valueA.hasNextWord()) {
-            int aData = valueA.getData().evaluate(refmap);
-            out.write(aData & 0x00ff);
-            out.write((aData & 0xff00) >> 8);
-        }
-        if(opcode.isBasic() && valueB.hasNextWord()) {
-            int bData = valueB.getData().evaluate(refmap);
-            out.write(bData & 0x00ff);
-            out.write((bData & 0xff00) >> 8);
-        }
+
+        if(valueA.hasNextWord())
+            valueA.getData().writeTo(out);
+        if(opcode.isBasic() && valueB.hasNextWord())
+            valueB.getData().writeTo(out);
     }
 
     @Override
     public String toString() {
-        return opcode.toString();
+        if(opcode.isBasic())
+            return opcode.toString()+" "+valueA.toString()+", "+valueB.toString();
+        else
+            return opcode.toString()+" "+valueA.toString();
     }
 }

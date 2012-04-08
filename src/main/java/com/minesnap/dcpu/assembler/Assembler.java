@@ -36,7 +36,6 @@ public class Assembler {
         Scanner sc = new Scanner(new File(filename), "UTF-8");
         List<Token> tokens = ASMTokenizer.tokenize(sc, filename);
         ResolverList resolvables = new ResolverList();
-        Map<String, Integer> refmap = new HashMap<String, Integer>();
         Iterator<Token> tokensI = tokens.listIterator();
         while(tokensI.hasNext()) {
             Token opToken = tokensI.next();
@@ -46,9 +45,11 @@ public class Assembler {
             String opterm = opToken.getValue().toUpperCase();
             if(opterm.charAt(0)==':') {
                 String label = opterm.substring(1);
-                if(refmap.containsKey(label))
+                try {
+                    resolvables.addLabel(label);
+                } catch (LabelAlreadyExistsError e) {
                     throw new TokenCompileError("Duplicate label found", opToken);
-                refmap.put(label, resolvables.getWordPosition());
+                }
                 continue;
             }
 
@@ -104,9 +105,7 @@ public class Assembler {
             }
         }
         FileOutputStream out = new FileOutputStream(new File(outname), false);
-        for(Resolvable resolvable : resolvables) {
-            resolvable.writeTo(out, refmap);
-        }
+        resolvables.writeTo(out);
         out.close();
     }
 
