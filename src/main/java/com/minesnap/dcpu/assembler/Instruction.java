@@ -41,7 +41,8 @@ public class Instruction implements Resolvable {
     }
 
     @Override
-    public void evaluateLabels(Map<String, Integer> labelValues) {
+    public void evaluateLabels(Map<String, Integer> labelValues)
+        throws SymbolLookupError {
         if(valueA.getData() != null)
             valueA.getData().evaluateLabels(labelValues);
         if(opcode.isBasic() && valueB.getData() != null)
@@ -60,7 +61,7 @@ public class Instruction implements Resolvable {
 
     @Override
     public void writeTo(OutputStream out)
-        throws SymbolLookupError, IOException {
+        throws IOException {
         int opword = opcode.getCode();
         if(opcode.isBasic()) {
             opword |= (valueA.evaluate() << 4) | (valueB.evaluate() << 10);

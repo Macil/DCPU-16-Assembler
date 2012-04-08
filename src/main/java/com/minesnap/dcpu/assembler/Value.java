@@ -37,12 +37,11 @@ public class Value {
         return data.getUnresolvedWord() > 0x1f;
     }
 
-    public byte evaluate()
-        throws SymbolLookupError {
+    public byte evaluate() {
         if(!type.hasLiteral()) {
             return type.getCode();
         } else {
-            data.checkResolved();
+            assert(data.checkResolved());
             if(hasNextWord()) {
                 return type.getCode();
             } else {

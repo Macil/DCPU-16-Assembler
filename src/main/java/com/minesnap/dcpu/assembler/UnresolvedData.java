@@ -37,11 +37,13 @@ public class UnresolvedData implements Resolvable {
     }
 
     @Override
-    public void evaluateLabels(Map<String, Integer> labelValues) {
+    public void evaluateLabels(Map<String, Integer> labelValues)
+        throws SymbolLookupError {
         if(reference != null) {
             Integer value = labelValues.get(reference);
-            if(value != null)
-                this.word = value;
+            if(value == null)
+                throw new SymbolLookupError(reference);
+            this.word = value;
         }
     }
 
@@ -52,17 +54,14 @@ public class UnresolvedData implements Resolvable {
         return 1;
     }
 
-    public boolean checkResolved()
-        throws SymbolLookupError {
-        if(word == null)
-            throw new SymbolLookupError(reference);
-        return true;
+    public boolean checkResolved() {
+        return word != null;
     }
 
     @Override
     public void writeTo(OutputStream out)
-        throws SymbolLookupError, IOException {
-        checkResolved();
+        throws IOException {
+        assert(checkResolved());
         out.write(word & 0x00ff);
         out.write((word & 0xff00) >> 8);
     }

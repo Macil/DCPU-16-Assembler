@@ -104,6 +104,7 @@ public class Assembler {
                 resolvables.add(instr);
             }
         }
+	resolvables.prepare();
         FileOutputStream out = new FileOutputStream(new File(outname), false);
         resolvables.writeTo(out);
         out.close();

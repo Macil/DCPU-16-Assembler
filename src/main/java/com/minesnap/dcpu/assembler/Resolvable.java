@@ -5,8 +5,9 @@ import java.io.OutputStream;
 import java.util.Map;
 
 public interface Resolvable {
-    public void evaluateLabels(Map<String, Integer> labelValues);
+    public void evaluateLabels(Map<String, Integer> labelValues)
+        throws SymbolLookupError;
     public int wordCount();
     public void writeTo(OutputStream out)
-        throws SymbolLookupError, IOException;
+        throws IOException;
 }
