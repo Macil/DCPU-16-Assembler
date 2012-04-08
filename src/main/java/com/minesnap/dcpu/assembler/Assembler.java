@@ -13,12 +13,22 @@ import java.util.ListIterator;
 
 public class Assembler {
     private boolean optimize = true;
+    private Map<String, Integer> newNBOpcodes = null;
 
     public Assembler() {
     }
 
     public void setOptimizations(boolean optimize) {
         this.optimize = optimize;
+    }
+
+    public void setNewNBOpcodes(Map<String, Integer> newNBOpcodes) {
+        for(Integer value : newNBOpcodes.values()) {
+            if(value < 0x02 || value > 0x3f) {
+                throw new IllegalArgumentException("Custom non-basic opcodes must be between 0x02 and 0x3f");
+            }
+        }
+        this.newNBOpcodes = newNBOpcodes;
     }
 
     public void assemble(String filename, String outname)
@@ -61,15 +71,13 @@ public class Assembler {
             }
             newlineRequired = true;
 
-            Opcode opcode;
-            try {
-                opcode = Opcode.valueOf(opterm);
-            } catch (IllegalArgumentException e) {
+            Opcode opcode = Opcode.getByName(opterm, newNBOpcodes);
+            if(opcode == null) {
                 // Turns out that token wasn't a real opcode
                 throw new TokenCompileError("Unknown opcode", opToken);
             }
 
-	    switch(opcode) {
+            switch(opcode.getType()) {
             case DAT:
             {
                 boolean isFirst = true;
@@ -109,7 +117,7 @@ public class Assembler {
             case BRK:
             {
                 // Replace BRK with SUB PC, 1
-                Instruction instr = new Instruction(Opcode.SUB);
+                Instruction instr = new Instruction(Opcode.get(OpcodeType.SUB));
                 instr.setValueA(new Value(ValueType.PC));
                 instr.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(1)));
                 resolvables.add(instr);
@@ -141,7 +149,7 @@ public class Assembler {
                     instr.setValueB(parseValueTokens(tokensI));
                 }
                 if(optimize) {
-                    if(instr.getOpcode() == Opcode.SET
+                    if(instr.getOpcode().getType() == OpcodeType.SET
                        && instr.getValueA().getType() == ValueType.PC
                        && instr.getValueB().getType() == ValueType.LITERAL) {
                         UnresolvedData data = instr.getValueB().getData();

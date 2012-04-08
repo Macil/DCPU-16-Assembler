@@ -3,55 +3,63 @@ package com.minesnap.dcpu.assembler;
 import java.util.Map;
 import java.util.HashMap;
 
-public enum Opcode {
-    SET(0x1),
-        ADD(0x2),
-        SUB(0x3),
-        MUL(0x4),
-        DIV(0x5),
-        MOD(0x6),
-        SHL(0x7),
-        SHR(0x8),
-        AND(0x9),
-        BOR(0xa),
-        XOR(0xb),
-        IFE(0xc),
-        IFN(0xd),
-        IFG(0xe),
-        IFB(0xf),
-
-        DAT,
-        JMP,
-        BRK,
-
-        JSR(0x10);
-
+public class Opcode {
+    private final String name;
     private final Integer code;
-    private final static Map<Integer, Opcode> BY_DATA = new HashMap<Integer, Opcode>();
+    private final OpcodeType type;
 
-    private Opcode() {
-        this(null);
+    private final static Map<String, Opcode> BY_NAME = new HashMap<String, Opcode>();
+    private final static Map<OpcodeType, Opcode> BY_TYPE = new HashMap<OpcodeType, Opcode>();
+
+    static {
+        for(OpcodeType type : OpcodeType.values()) {
+            if(type == OpcodeType.CUSTOM)
+                continue;
+
+            Opcode opcode = new Opcode(type);
+            BY_NAME.put(type.toString(), opcode);
+            BY_TYPE.put(type, opcode);
+        }
     }
 
-    private Opcode(Integer code) {
+    private Opcode(OpcodeType type) {
+        this(type.toString(), type.getCode(), type);
+    }
+
+    private Opcode(String name, Integer code, OpcodeType type) {
+        this.name = name;
         this.code = code;
+        this.type = type;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Integer getCode() {
         return code;
     }
 
+    public OpcodeType getType() {
+        return type;
+    }
+
     public boolean isBasic() {
         return (code & 0xf) != 0;
     }
 
-    public static Opcode getByCode(int code) {
-        return BY_DATA.get(code);
+    public static Opcode get(OpcodeType type) {
+        return BY_TYPE.get(type);
     }
 
-    static {
-        for (Opcode opcode : values()) {
-            BY_DATA.put(opcode.code, opcode);
+    public static Opcode getByName(String name, Map<String, Integer> newNBOpcodes) {
+        Opcode opcode = BY_NAME.get(name);
+        if(opcode == null) {
+            Integer number = newNBOpcodes.get(name);
+            if(number != null) {
+                opcode = new Opcode(name, number<<4, OpcodeType.CUSTOM);
+            }
         }
+        return opcode;
     }
 }

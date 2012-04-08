@@ -5,19 +5,26 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
 
 public class AssemblerLauncher {
     public static void main(String[] args) {
         boolean optimize = true;
         List<String> argsList = new ArrayList<String>(2);
+        Map<String, Integer> newNBOpcodes = new HashMap<String, Integer>();
+
         for(int i=0; i<args.length; i++) {
             switch(args[i].charAt(0)) {
             case '-':
-                if(args[i].equals("--no-optimizations")) {
-                    optimize = false;
-                } else if(args[i].equals("-h") || args[i].equals("--help")) {
+                if(args[i].equals("-h") || args[i].equals("--help")) {
                     usage();
                     return;
+                } else if(args[i].equals("--no-optimizations")) {
+                    optimize = false;
+                } else if(args[i].equals("-n") || args[i].equals("--new-nbopcode")) {
+                    String name = args[++i].toUpperCase();
+                    int number = Integer.parseInt(args[++i]);
+                    newNBOpcodes.put(name, number);
                 } else {
                     System.err.println("Not a valid argument: "+args[i]);
                     usage();
@@ -44,6 +51,7 @@ public class AssemblerLauncher {
 
         Assembler as = new Assembler();
         as.setOptimizations(optimize);
+        as.setNewNBOpcodes(newNBOpcodes);
 
         try {
             as.assemble(filename, outname);
@@ -66,7 +74,10 @@ public class AssemblerLauncher {
         System.out.println("Default OUTPUTFILENAME is \"a.out\".");
         System.out.println();
         System.out.println("Available options:");
-        System.out.println(" -h, --help            Show this help message.");
-        System.out.println(" --no-optimizations    Disable automatic optimiziations.");
+        System.out.println(" -h, --help    Show this help message.");
+        System.out.println(" --no-optimizations");
+        System.out.println("               Disable automatic optimiziations.");
+        System.out.println(" -n, --new-nbopcode name number");
+        System.out.println("               Define a custom non-basic opcode. May be used more than once.");
     }
 }

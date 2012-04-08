@@ -34,17 +34,17 @@ public class JMPInstruction implements Resolvable {
             // as it takes the fewest cycles. If we can't use the
             // short forms of ADD or SUB, then use SET.
             if(dest <= maxliteral || delta > maxliteral || delta < -maxliteral) {
-                realInstruction = new Instruction(Opcode.SET);
+                realInstruction = new Instruction(Opcode.get(OpcodeType.SET));
                 realInstruction.setValueA(new Value(ValueType.PC));
                 realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(dest)));
             } else if(delta > 0) {
                 assert(delta <= maxliteral);
-                realInstruction = new Instruction(Opcode.ADD);
+                realInstruction = new Instruction(Opcode.get(OpcodeType.ADD));
                 realInstruction.setValueA(new Value(ValueType.PC));
                 realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(delta)));
             } else if(delta < 0) {
                 assert(-delta <= maxliteral);
-                realInstruction = new Instruction(Opcode.SUB);
+                realInstruction = new Instruction(Opcode.get(OpcodeType.SUB));
                 realInstruction.setValueA(new Value(ValueType.PC));
                 realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(-delta)));
             } else {
