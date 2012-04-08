@@ -311,6 +311,12 @@ public class Assembler {
     }
 
     public static void usage() {
-        System.out.println("Parameters: INPUTFILENAME [OUTPUTFILENAME]");
+        System.out.println("Parameters: [OPTION]... INPUTFILENAME [OUTPUTFILENAME]");
+        System.out.println("Assembles INPUTFILENAME and writes the output to OUTPUTFILENAME.");
+        System.out.println("Default OUTPUTFILENAME is \"a.out\".");
+        System.out.println();
+        System.out.println("Available options:");
+        System.out.println(" -h, --help            Show this help message.");
+        System.out.println(" --no-optimizations    Disable automatic optimiziations.");
     }
 }
