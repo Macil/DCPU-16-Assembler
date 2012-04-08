@@ -139,8 +139,10 @@ public class Assembler {
                 int number = parseIntToken(second);
                 Token third = tokensI.next();
                 if(third.getValue().equals("]")) {
+                    // We're processing something like [3]
                     return new Value(ValueType.DN, new UnresolvedData(number));
                 } else if(third.getValue().equals("+")) {
+                    // We're processing something like [3+B]
                     Token fourth = tokensI.next();
                     String fourthS = fourth.getValue().toUpperCase();
                     ValueType type = ValueType.valueOf(fourthS).dereferenceNextPlus();
@@ -153,10 +155,12 @@ public class Assembler {
                 }
             } else {
                 ValueType type;
+                ValueType register = null;
                 UnresolvedData data = null;
                 String secondS = second.getValue().toUpperCase();
                 try {
-                    type = ValueType.valueOf(secondS).dereference();
+                    register = ValueType.valueOf(secondS);
+                    type = register.dereference();
                 } catch (IllegalArgumentException e) {
                     type = ValueType.DN;
                     data = new UnresolvedData(secondS);
@@ -165,11 +169,20 @@ public class Assembler {
                 if(third.getValue().equals("]")) {
                     return new Value(type, data);
                 } else if(third.getValue().equals("+")) {
-                    if(data == null)
-                        throw new TokenCompileError("Register must go second in offset expressions", second);
                     Token fourth = tokensI.next();
                     String fourthS = fourth.getValue().toUpperCase();
-                    type = ValueType.valueOf(fourthS).dereferenceNextPlus();
+                    if(data == null) {
+                        // We're processing something like [B+3] or [B+somelabel]
+                        type = register.dereferenceNextPlus();
+                        if(is_digit(fourthS.charAt(0))) {
+                            data = new UnresolvedData(parseIntToken(fourth));
+                        } else {
+                            data = new UnresolvedData(fourthS);
+                        }
+                    } else {
+                        // We're processing something like [somelabel+B]
+                        type = ValueType.valueOf(fourthS).dereferenceNextPlus();
+                    }
                     Token close = tokensI.next();
                     if(!close.getValue().equals("]"))
                         throw new TokenCompileError("Expected closing bracket", close);
