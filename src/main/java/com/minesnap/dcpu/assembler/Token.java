@@ -1,7 +1,5 @@
 package com.minesnap.dcpu.assembler;
 
-import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
-
 public class Token {
     private final String value;
     private final String sourceFile;
@@ -26,6 +24,6 @@ public class Token {
     }
 
     public String toString() {
-        return "Token(\""+escapeJava(value)+"\", "+sourceFile+", "+lineNumber+")";
+        return "Token(\""+Util.escapeJava(value)+"\", "+sourceFile+", "+lineNumber+")";
     }
 }
