@@ -21,6 +21,9 @@ public enum Opcode {
         IFB(0xf),
 
         DAT,
+        JMP,
+        BRK,
+
         JSR(0x10);
 
     private final Integer code;
@@ -42,8 +45,8 @@ public enum Opcode {
         return (code & 0xf) != 0;
     }
 
-    public static Opcode getByData(Integer data) {
-        return BY_DATA.get(data);
+    public static Opcode getByCode(int code) {
+        return BY_DATA.get(code);
     }
 
     static {

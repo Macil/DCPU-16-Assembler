@@ -87,7 +87,9 @@ public class Assembler {
                 throw new TokenCompileError("Unknown opcode", opToken);
             }
 
-            if(opcode == Opcode.DAT) {
+	    switch(opcode) {
+            case DAT:
+            {
                 boolean isFirst = true;
                 while(tokensI.hasNext()) {
                     if(!isFirst) {
@@ -117,10 +119,26 @@ public class Assembler {
                         int number = parseIntToken(dataToken);
                         resolvables.add(new UnresolvedData(number));
                     } else {
-                        resolvables.add(new UnresolvedData(dataToken.getValue()));
+                        resolvables.add(parseLabelToken(dataToken));
                     }
                 }
-            } else {
+                break;
+            }
+            case BRK:
+            {
+                // Replace BRK with SUB PC, 1
+                Instruction instr = new Instruction(Opcode.SUB);
+                instr.setValueA(new Value(ValueType.PC));
+                instr.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(1)));
+                resolvables.add(instr);
+                break;
+            }
+            case JMP:
+            {
+                throw new UnsupportedOperationException("JMP not implemented yet");
+            }
+            default:
+            {
                 Instruction instr = new Instruction(opcode);
                 instr.setValueA(parseValueTokens(tokensI));
                 // If this opcode has 2 arguments
@@ -131,6 +149,7 @@ public class Assembler {
                     instr.setValueB(parseValueTokens(tokensI));
                 }
                 resolvables.add(instr);
+            }
             }
         }
 	resolvables.prepare();
