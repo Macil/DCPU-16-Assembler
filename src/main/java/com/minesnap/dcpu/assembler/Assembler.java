@@ -7,22 +7,45 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Scanner;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.ListIterator;
 
 public class Assembler {
     public static void main(String[] args) {
-        if(args.length < 1 || args.length > 2) {
+        boolean optimization = true;
+        List<String> argsList = new ArrayList<String>(2);
+        for(int i=0; i<args.length; i++) {
+            switch(args[i].charAt(0)) {
+            case '-':
+                if(args[i].equals("--no-optimization")) {
+                    optimization = false;
+                } else if(args[i].equals("-h") || args[i].equals("--help")) {
+                    usage();
+                    return;
+                } else {
+                    System.err.println("Not a valid argument: "+args[i]);
+                    usage();
+                    System.exit(1);
+                }
+                break;
+            default:
+                argsList.add(args[i]);
+            }
+        }
+
+        if(argsList.size() < 1 || argsList.size() > 2) {
+            System.err.println("Wrong number of arguments.");
             usage();
             System.exit(1);
         }
 
-        String filename = args[0];
+        String filename = argsList.get(0);
         String outname;
-        if(args.length < 2)
+        if(argsList.size() < 2)
             outname = "a.out";
         else
-            outname = args[1];
+            outname = argsList.get(1);
 
         try {
             assemble(filename, outname);
