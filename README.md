@@ -36,6 +36,16 @@ Strings may include Unicode characters, and they will be encoded into the
 compiled binary as UTF-16. Notch's DCPU-16 implementation in 0x10c may or may
 not natively support non-ASCII values.
 
+Obtaining
+---------
+
+This software project has compiled releases hosted at
+https://github.com/AgentME/DCPU-16-Assembler/downloads
+
+(Make sure you download one of the named .zip files under the
+"Download Packages" section! The "Download as zip" and "Download as
+tar.gz" buttons just lead you to the project's source code.)
+
 Usage
 -----
 
