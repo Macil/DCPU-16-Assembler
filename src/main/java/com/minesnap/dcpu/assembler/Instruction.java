@@ -60,7 +60,7 @@ public class Instruction implements Resolvable {
     }
 
     @Override
-    public void writeTo(OutputStream out)
+    public void writeTo(WordWriter out)
         throws IOException {
         int opword = opcode.getCode();
         if(opcode.isBasic()) {
@@ -69,7 +69,7 @@ public class Instruction implements Resolvable {
             opword |= (valueA.evaluate() << 10);
         }
 
-        Util.writeWord(out, opword);
+        out.writeWord(opword);
 
         if(valueA.hasNextWord())
             valueA.getData().writeTo(out);

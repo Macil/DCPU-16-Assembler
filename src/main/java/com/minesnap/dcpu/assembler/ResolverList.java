@@ -139,7 +139,7 @@ public class ResolverList {
         prepared = true;
     }
 
-    public void writeTo(OutputStream out)
+    public void writeTo(WordWriter out)
         throws IOException {
         if(!prepared)
             throw new IllegalStateException("prepare method must be called before writeTo");

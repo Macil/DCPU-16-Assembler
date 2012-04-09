@@ -9,6 +9,8 @@ import java.util.HashMap;
 
 public class AssemblerLauncher {
     public static void main(String[] args) {
+        boolean endianDecided = false;
+        boolean littleEndian = true;
         boolean optimize = true;
         List<String> argsList = new ArrayList<String>(2);
         Map<String, Integer> newNBOpcodes = new HashMap<String, Integer>();
@@ -21,6 +23,22 @@ public class AssemblerLauncher {
                     return;
                 } else if(args[i].equals("--no-optimizations")) {
                     optimize = false;
+                } else if(args[i].equals("-b") || args[i].equals("--big-endian")) {
+                    if(endianDecided) {
+                        System.err.println("Error: You can't specify multiple endian types.");
+                        usage();
+                        System.exit(1);
+                    }
+                    endianDecided = true;
+                    littleEndian = false;
+                } else if(args[i].equals("-l") || args[i].equals("--little-endian")) {
+                    if(endianDecided) {
+                        System.err.println("Error: You can't specify multiple endian types.");
+                        usage();
+                        System.exit(1);
+                    }
+                    endianDecided = true;
+                    littleEndian = true;
                 } else if(args[i].equals("-n") || args[i].equals("--new-nbopcode")) {
                     if(args.length <= i+2) {
                         System.err.println("-n/--new-nbopcode requires two arguments.");
@@ -55,6 +73,7 @@ public class AssemblerLauncher {
             outname = argsList.get(1);
 
         Assembler as = new Assembler();
+        as.setLittleEndian(littleEndian);
         as.setOptimizations(optimize);
         as.setNewNBOpcodes(newNBOpcodes);
 
@@ -82,6 +101,10 @@ public class AssemblerLauncher {
         System.out.println(" -h, --help    Show this help message.");
         System.out.println(" --no-optimizations");
         System.out.println("               Disable automatic optimiziations.");
+        System.out.println(" -l, --little-endian");
+        System.out.println("               Output little endian binaries (default).");
+        System.out.println(" -b, --big-endian");
+        System.out.println("               Output big endian binaries.");
         System.out.println(" -n, --new-nbopcode name number");
         System.out.println("               Define a custom non-basic opcode. May be used more than once.");
     }

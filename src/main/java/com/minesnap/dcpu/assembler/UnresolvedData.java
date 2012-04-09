@@ -59,9 +59,9 @@ public class UnresolvedData implements Resolvable {
     }
 
     @Override
-    public void writeTo(OutputStream out)
+    public void writeTo(WordWriter out)
         throws IOException {
         assert(checkResolved());
-        Util.writeWord(out, word);
+        out.writeWord(word);
     }
 }

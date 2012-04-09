@@ -12,10 +12,15 @@ import java.util.Map;
 import java.util.ListIterator;
 
 public class Assembler {
+    private boolean littleEndian = true;
     private boolean optimize = true;
     private Map<String, Integer> newNBOpcodes = null;
 
     public Assembler() {
+    }
+
+    public void setLittleEndian(boolean littleEndian) {
+        this.littleEndian = littleEndian;
     }
 
     public void setOptimizations(boolean optimize) {
@@ -168,9 +173,12 @@ public class Assembler {
             }
         }
         resolvables.prepare();
-        FileOutputStream out = new FileOutputStream(new File(outname), false);
-        resolvables.writeTo(out);
-        out.close();
+        WordWriter out = new WordWriter(new FileOutputStream(outname, false), littleEndian);
+        try {
+            resolvables.writeTo(out);
+        } finally {
+            out.close();
+        }
     }
 
     // Returns the value that must be passed to Instruction.setValueA or B

@@ -7,12 +7,6 @@ import java.io.OutputStream;
 public class Util {
     private Util() {}
 
-    public static void writeWord(OutputStream out, int word)
-        throws IOException {
-        out.write(word & 0x00ff);
-        out.write((word & 0xff00) >> 8);
-    }
-
     public static String escapeJava(String s) {
         int length = s.length();
         StringBuilder sb = new StringBuilder(length*2);

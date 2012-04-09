@@ -61,7 +61,7 @@ public class JMPInstruction implements Resolvable {
     }
 
     @Override
-    public void writeTo(OutputStream out)
+    public void writeTo(WordWriter out)
         throws IOException {
         if(realInstruction != null)
             realInstruction.writeTo(out);
