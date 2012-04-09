@@ -59,7 +59,7 @@ public class Opcode {
 
     public static Opcode getByName(String name, Map<String, Integer> newNBOpcodes) {
         Opcode opcode = BY_NAME.get(name);
-        if(opcode == null) {
+        if(opcode == null && newNBOpcodes != null) {
             Integer number = newNBOpcodes.get(name);
             if(number != null) {
                 opcode = new Opcode(name, number<<4, OpcodeType.CUSTOM);

@@ -82,6 +82,8 @@ public class Assembler {
                 throw new TokenCompileError("Unknown opcode", opToken);
             }
 
+            int datRepeat = 1;
+
             switch(opcode.getType()) {
             case DS:
             {
@@ -99,7 +101,20 @@ public class Assembler {
             }
             case TIMES:
             {
-                throw new UnsupportedOperationException("TIMES / DUP opcode not supported yet");
+                Token countToken = tokensI.next();
+                datRepeat = parseIntToken(countToken);
+
+                opToken = tokensI.next();
+                opterm = opToken.getValue().toUpperCase();
+                opcode = Opcode.getByName(opterm, newNBOpcodes);
+                if(opcode == null) {
+                    throw new TokenCompileError("Unknown opcode", opToken);
+                }
+                if(opcode.getType() != OpcodeType.DAT) {
+                    throw new TokenCompileError("Expected DAT opcode after TIMES/DUP opcode", opToken);
+                }
+
+                // Fall through to DAT
             }
             case DAT:
             {
@@ -138,7 +153,7 @@ public class Assembler {
                     }
                 }
 
-                resolvables.add(new UnresolvedMultiData(dataList, 1));
+                resolvables.add(new UnresolvedMultiData(dataList, datRepeat));
 
                 break;
             }
