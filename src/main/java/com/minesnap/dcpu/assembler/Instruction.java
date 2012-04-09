@@ -69,8 +69,7 @@ public class Instruction implements Resolvable {
             opword |= (valueA.evaluate() << 10);
         }
 
-        out.write(opword & 0x00ff);
-        out.write((opword & 0xff00) >> 8);
+        Util.writeWord(out, opword);
 
         if(valueA.hasNextWord())
             valueA.getData().writeTo(out);

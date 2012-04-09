@@ -62,7 +62,6 @@ public class UnresolvedData implements Resolvable {
     public void writeTo(OutputStream out)
         throws IOException {
         assert(checkResolved());
-        out.write(word & 0x00ff);
-        out.write((word & 0xff00) >> 8);
+        Util.writeWord(out, word);
     }
 }
