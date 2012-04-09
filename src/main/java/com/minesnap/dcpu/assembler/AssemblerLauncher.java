@@ -47,6 +47,16 @@ public class AssemblerLauncher {
                     }
                     String name = args[++i].toUpperCase();
                     int number = Integer.parseInt(args[++i]);
+                    if(newNBOpcodes.containsKey(name)) {
+                        System.err.println("You may not specify multiple NB-opcodes with the same name: "+name);
+                        usage();
+                        System.exit(1);
+                    }
+                    if(newNBOpcodes.containsValue(number)) {
+                        System.err.println("You may not specify multiple NB-opcodes with the same number: "+number);
+                        usage();
+                        System.exit(1);
+                    }
                     newNBOpcodes.put(name, number);
                 } else {
                     System.err.println("Not a valid argument: "+args[i]);
