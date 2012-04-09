@@ -1,5 +1,9 @@
 package com.minesnap.dcpu.assembler;
 
+import java.util.List;
+import java.util.Collections;
+import java.util.Arrays;
+
 public enum OpcodeType {
     SET(0x1),
         ADD(0x2),
@@ -20,22 +24,37 @@ public enum OpcodeType {
         DAT,
         JMP,
         BRK,
+        TIMES(null, "DUP"),
+        DS(null, ".DS"),
 
         JSR(0x10),
 
         CUSTOM(0x0);
 
     private final Integer code;
+    private final List<String> altNames;
 
     private OpcodeType() {
         this(null);
     }
 
     private OpcodeType(Integer code) {
+        this(code, null);
+    }
+
+    private OpcodeType(Integer code, String... altNames) {
         this.code = code;
+        if(altNames == null)
+            this.altNames = Collections.EMPTY_LIST;
+        else
+            this.altNames = Collections.unmodifiableList(Arrays.asList(altNames));
     }
 
     public Integer getCode() {
         return code;
+    }
+
+    public List<String> getAltNames() {
+        return altNames;
     }
 }

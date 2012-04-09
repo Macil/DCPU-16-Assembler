@@ -83,6 +83,22 @@ public class Assembler {
             }
 
             switch(opcode.getType()) {
+            case DS:
+            {
+                if(opcode.getName().charAt(0) != '.') {
+                    throw new TokenCompileError(".DS directive requires a period", opToken);
+                }
+                Token countToken = tokensI.next();
+                int count = parseIntToken(countToken);
+                for(int i=0; i<count; i++) {
+                    resolvables.add(new UnresolvedData(0));
+                }
+                break;
+            }
+            case TIMES:
+            {
+                throw new UnsupportedOperationException("TIMES / DUP opcode not supported yet");
+            }
             case DAT:
             {
                 boolean isFirst = true;

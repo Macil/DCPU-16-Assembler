@@ -19,6 +19,11 @@ public class Opcode {
             Opcode opcode = new Opcode(type);
             BY_NAME.put(type.toString(), opcode);
             BY_TYPE.put(type, opcode);
+
+            for(String name : type.getAltNames()) {
+                Opcode alt = new Opcode(name, type.getCode(), type);
+                BY_NAME.put(name, alt);
+            }
         }
     }
 
