@@ -79,8 +79,20 @@ tar.gz" buttons just lead you to the project's source code.)
 Usage
 -----
 
-On most platforms, the jar file can be run from the command line as
-follows:
+Java is required to use this assembler. On most platforms, the jar
+file can be run from the command line as follows:
+
+    java -jar DCPU16Assembler.jar
+
+On Windows, the java executable may not be in your default search
+path. If the above line does not work, then find your Java
+installation's directory, and customize the following command to fit
+your system. The following command is not permanent and will only
+affect this current session:
+
+    set path=%path%;C:\Program Files (x86)\Java\jdk1.6.0_07\bin
+
+If you got that right, then the following command should work now:
 
     java -jar DCPU16Assembler.jar
 
