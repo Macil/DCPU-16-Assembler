@@ -90,9 +90,11 @@ public class Assembler {
                 }
                 Token countToken = tokensI.next();
                 int count = parseIntToken(countToken);
-                for(int i=0; i<count; i++) {
-                    resolvables.add(new UnresolvedData(0));
-                }
+
+                List<UnresolvedData> dataList = new ArrayList<UnresolvedData>(1);
+                dataList.add(new UnresolvedData(0));
+                resolvables.add(new UnresolvedMultiData(dataList, count));
+
                 break;
             }
             case TIMES:
