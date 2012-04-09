@@ -21,8 +21,8 @@ instructions would be shorter. If optimizations are enabled (which they are by
 default), then all eligible uses of "SET PC, value" in the source file will
 also be considered for this optimization.
 
-Data Notes
-----------
+Input Source Notes
+------------------
 
 Integers may be specified as a decimal value, or they may be specified in
 hexadecimal by prepending them with "0x" (i.e. "0x1f").
@@ -66,6 +66,11 @@ can specify an output filename by using a second argument:
 The -h/--help option can be given to show the usage instructions and list of
 options, and the --no-optimizations option can be given to disable all
 automatic optimizations while compiling.
+
+This assembler support writing its binaries in both little endian and
+big endian format. The assembler defaults to little endian format. The
+format may be specified with one of the -l/--little-endian or
+-b/--big-endian options.
 
 License
 -------
