@@ -43,9 +43,10 @@ specified in the standard (JSR, with the value of 1).
 
 Custom DCPU-16 implementations may implement other NB-opcodes, so this
 assembler allows the user to specify custom NB-opcodes and their
-values on the command line. The -n/--new-nbopcode options may be used
-(multiple times even) to specify the custom NB-opcodes. Look at the
-Usage section for examples.
+values on the command line. The value of a custom NB-opcode must be
+between 2 and 63. The -n/--new-nbopcode options may be used (multiple
+times even) to specify the custom NB-opcodes. Look at the Usage
+section for examples.
 
 Input Source Notes
 ------------------
