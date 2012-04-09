@@ -22,6 +22,11 @@ public class AssemblerLauncher {
                 } else if(args[i].equals("--no-optimizations")) {
                     optimize = false;
                 } else if(args[i].equals("-n") || args[i].equals("--new-nbopcode")) {
+                    if(args.length <= i+2) {
+                        System.err.println("-n/--new-nbopcode requires two arguments.");
+                        usage();
+                        System.exit(1);
+                    }
                     String name = args[++i].toUpperCase();
                     int number = Integer.parseInt(args[++i]);
                     newNBOpcodes.put(name, number);
