@@ -104,6 +104,8 @@ public class Assembler {
             case DAT:
             {
                 boolean isFirst = true;
+                List<UnresolvedData> dataList = new ArrayList<UnresolvedData>();
+
                 while(tokensI.hasNext()) {
                     if(!isFirst) {
                         Token comma = tokensI.next();
@@ -126,15 +128,18 @@ public class Assembler {
                         byte[] bytes = quoted.getBytes(Charset.forName("UTF-16LE"));
                         assert(bytes.length%2 == 0);
                         for(int k=0; k<bytes.length; k+=2) {
-                            resolvables.add(new UnresolvedData(bytes[k] | (bytes[k+1]<<8)));
+                            dataList.add(new UnresolvedData(bytes[k] | (bytes[k+1]<<8)));
                         }
                     } else if(is_digit(firstChar)) {
                         int number = parseIntToken(dataToken);
-                        resolvables.add(new UnresolvedData(number));
+                        dataList.add(new UnresolvedData(number));
                     } else {
-                        resolvables.add(parseLabelToken(dataToken));
+                        dataList.add(parseLabelToken(dataToken));
                     }
                 }
+
+                resolvables.add(new UnresolvedMultiData(dataList, 1));
+
                 break;
             }
             case BRK:
