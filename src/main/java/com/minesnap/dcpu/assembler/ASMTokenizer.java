@@ -12,7 +12,7 @@ public class ASMTokenizer {
     private static final String spaces = " \t\r\n";
 
     // These characters separate tokens and are tokens themselves.
-    private static final String borders = "[],+*-";
+    private static final String borders = "[],+*";
 
     private static boolean is_space(char c) {
         return spaces.indexOf(c) != -1;

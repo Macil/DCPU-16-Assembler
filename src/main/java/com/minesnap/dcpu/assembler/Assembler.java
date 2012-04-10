@@ -295,7 +295,7 @@ public class Assembler {
         
     }
 
-    private static final String digits = "0123456789";
+    private static final String digits = "-0123456789";
     private static boolean is_digit(char c) {
         return digits.indexOf(c) != -1;
     }
@@ -317,21 +317,42 @@ public class Assembler {
         } catch (NumberFormatException e) {
             throw new TokenCompileError("Invalid number", token);
         }
-        if((number & 0xffff) != number) {
-            throw new TokenCompileError("Number can't fit in two byte word", token);
+        int hibyte = number & 0xffff0000;
+        if(hibyte != 0) {
+            // We need to make sure that number isn't just negative
+            // and within bounds.
+            if(hibyte != 0xffff0000 || (number & 0x8000) != 0x8000) {
+                throw new TokenCompileError("Number can't fit in two byte word", token);
+            }
         }
+        number &= 0xffff;
         return number;
     }
 
     private static int parseInt(String value)
         throws NumberFormatException {
+
+        int ivalue;
+        boolean isNegative = false;
         value = value.toUpperCase();
-        if(value.startsWith("0X") || value.startsWith("0H")) {
-            return Integer.parseInt(value.substring(2), 16);
-        } else if(value.startsWith("0B")) {
-            return Integer.parseInt(value.substring(2), 2);
-        } else {
-            return Integer.parseInt(value, 10);
+
+        if(value.startsWith("-")) {
+            isNegative = true;
+            value = value.substring(1);
+            if(value.length() == 0) {
+                throw new NumberFormatException();
+            }
         }
+        if(value.startsWith("0X") || value.startsWith("0H")) {
+            ivalue = Integer.parseInt(value.substring(2), 16);
+        } else if(value.startsWith("0B")) {
+            ivalue = Integer.parseInt(value.substring(2), 2);
+        } else {
+            ivalue = Integer.parseInt(value, 10);
+        }
+        if(isNegative) {
+            ivalue = -ivalue;
+        }
+        return ivalue;
     }
 }
