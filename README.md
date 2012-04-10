@@ -5,12 +5,12 @@ This is an assembler for the DCPU-16 architecture as designed by
 Notch. This implements version 1.1 of the standard available at
 http://0x10c.com/doc/dcpu-16.txt
 
-This assembler also supports the DAT, BRK, JMP, .DS, DUP, and TIMES
-meta-instructions that work on all DCPU-16 implementations, and it
-allows the user to specify custom new non-basic opcode instructions
-for use with supporting DCPU-16 implementations.
+This assembler also supports the DAT/DATA, BRK, JMP, RESERVE/.DS, and
+TIMES/DUP meta-instructions that work on all DCPU-16 implementations,
+and it allows the user to specify custom new non-basic opcode
+instructions for use with supporting DCPU-16 implementations.
 
-The DAT instruction is followed by data to put directly in the
+The DAT or DATA instruction is followed by data to put directly in the
 compiled binary. This data is a comma-delimited list of strings,
 characters, integers, and address labels.
 
@@ -25,14 +25,13 @@ are enabled (which they are by default), then all eligible uses of
 "SET PC, value" in the source file will also be considered for this
 optimization.
 
-The .DS instruction takes one integer argument specifying how many
-words of zeroes to reserve in memory at its location. ".DS 3" is
-equivalent to "DAT 0, 0, 0".
+The RESERVE or .DS instruction takes one integer argument specifying
+how many words of zeroes to reserve in memory at its location. ".DS 3"
+is equivalent to "DAT 0, 0, 0".
 
-The DUP and TIMES instructions are equivalent. They can be used
-immediately before a DAT instruction with a number that tells how many
-times to repeat the DAT instruction. "TIMES 3 DAT 5" is equivalent to
-"DAT 5, 5, 5".
+The TIMES or DUP instruction can be used immediately before a DAT
+instruction with a number that tells how many times to repeat the DAT
+instruction. "TIMES 3 DAT 5" is equivalent to "DAT 5, 5, 5".
 
 Custom NB-Opcodes
 -----------------
