@@ -1,0 +1,24 @@
+(2012/04/10) - v1.4
+- Added: Support for negative integer literals.
+
+(2012/04/10) - v1.3
+- Added: RESERVE and DATA as alternate names for .DS and DAT
+  respectively.
+
+(2012/04/09) - v1.2
+- Added: TIMES/DUP directive.
+- Added: .DS directive.
+- Added: Support for big endian output.
+- Added: Custom NB-opcode support.
+
+(2012/04/08) - v1.1
+- Fixed: JMP Instruction optimization. It used to prefer ADD/SUB
+  instruction in short form even if SET instruction in short form was
+  available. The SET instruction is defined to use the fewest cycles,
+  so now the SET instruction in short form is preferred whenever it's
+  available.
+
+(2012/04/08) - v1.0
+- Initial release. Meets Notch's v1.1 DCPU-16 standard.
+- Supports optimized JMP meta-instruction.
+- Supports automatic SET PC, label to JMP label optimization.
