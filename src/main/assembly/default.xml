@@ -17,13 +17,16 @@
       <source>README.md</source>
       <destName>README.txt</destName>
       <outputDirectory>/</outputDirectory>
+      <lineEnding>dos</lineEnding>
     </file>
   </files>
   <fileSets>
     <fileSet>
       <includes>
         <include>LICENSE.txt</include>
+        <include>CHANGELOG.txt</include>
       </includes>
+      <lineEnding>dos</lineEnding>
     </fileSet>
   </fileSets>
 </assembly>
