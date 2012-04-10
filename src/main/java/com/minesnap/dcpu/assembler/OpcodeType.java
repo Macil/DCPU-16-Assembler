@@ -25,7 +25,7 @@ public enum OpcodeType {
         JMP,
         BRK,
         TIMES(null, "DUP"),
-        DS(null, ".DS"),
+        RESERVE(null, ".DS"),
 
         JSR(0x10),
 

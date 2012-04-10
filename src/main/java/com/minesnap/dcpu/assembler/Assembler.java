@@ -85,11 +85,8 @@ public class Assembler {
             int datRepeat = 1;
 
             switch(opcode.getType()) {
-            case DS:
+            case RESERVE:
             {
-                if(opcode.getName().charAt(0) != '.') {
-                    throw new TokenCompileError(".DS directive requires a period", opToken);
-                }
                 Token countToken = tokensI.next();
                 int count = parseIntToken(countToken);
 
