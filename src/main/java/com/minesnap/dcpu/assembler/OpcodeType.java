@@ -21,7 +21,7 @@ public enum OpcodeType {
         IFG(0xe),
         IFB(0xf),
 
-        DAT,
+        DAT(null, "DATA"),
         JMP,
         BRK,
         TIMES(null, "DUP"),
@@ -36,10 +36,6 @@ public enum OpcodeType {
 
     private OpcodeType() {
         this(null);
-    }
-
-    private OpcodeType(Integer code) {
-        this(code, null);
     }
 
     private OpcodeType(Integer code, String... altNames) {
