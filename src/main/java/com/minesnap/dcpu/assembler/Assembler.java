@@ -274,73 +274,87 @@ public class Assembler {
                 }
             }
         } else {
-            Token second = tokensI.next();
-            if(is_digit(second.getValue().charAt(0))) {
-                Token third = tokensI.next();
-                if(third.getValue().equals("]")) {
-                    if(second.getValue().equals("--SP")) {
-                        return new Value(ValueType.PUSH);
+            // We're about to process some dereference expression like
+            // [--SP], [SP++], [B], [B+3], [somelabel+B],
+            // [somelabel+1], [somelabel+B+1], etc.
+            int offset = 0;
+            ValueType register = null;
+            String labelRef = null;
+            while(true) {
+                Token expToken = tokensI.next();
+                String expTokenS = expToken.getValue().toUpperCase();
+                if(expTokenS.equals("\n")) {
+                    throw new TokenCompileError("Was not expecting newline", expToken);
+                }
+                if(is_digit(expTokenS.charAt(0))) {
+                    if(expTokenS.equals("--SP")) {
+                        if(register != null)
+                            throw new TokenCompileError("Invalid dereference expression", expToken);
+                        register = ValueType.PUSH;
+                    } else {
+                        offset += parseIntToken(expToken);
                     }
-                    // We're processing something like "[3]"
-                    int number = parseIntToken(second);
-                    return new Value(ValueType.DN, new UnresolvedData(number));
-                } else if(third.getValue().equals("+")) {
-                    // We're processing something like "[3+B]"
-                    int number = parseIntToken(second);
-                    Token fourth = tokensI.next();
-                    String fourthS = fourth.getValue().toUpperCase();
-                    ValueType type = ValueType.valueOf(fourthS).dereferenceNextPlus();
-                    Token close = tokensI.next();
-                    if(!close.getValue().equals("]"))
-                        throw new TokenCompileError("Expected closing bracket", close);
-                    return new Value(type, new UnresolvedData(number));
                 } else {
-                    throw new TokenCompileError("Expected '+' or ']'", third);
-                }
-            } else {
-                ValueType type;
-                UnresolvedData data = null;
-                String secondS = second.getValue().toUpperCase();
-                try {
-                    type = ValueType.valueOf(secondS).dereference();
-                } catch (IllegalArgumentException e) {
-                    type = ValueType.DN;
-                    data = parseLabelToken(second);
-                }
-                Token third = tokensI.next();
-                if(third.getValue().equals("]")) {
-                    return new Value(type, data);
-                } else if(third.getValue().equals("+")) {
-                    Token fourth = tokensI.next();
-                    String fourthS = fourth.getValue().toUpperCase();
-                    if(data == null) {
-                        // We're processing something like "[B+3]" or "[B+somelabel]"
-                        if(fourthS.equals("+")) {
-                            // Nope, we're processing something like "[B++]".
-                            // Note that [SP] (PEEK) is the only thing we can process like this.
-                            if(type == ValueType.PEEK) {
-                                type = ValueType.POP;
-                            } else {
-                                throw new TokenCompileError("Can not increment type "+type, second);
-                            }
+                    // This token is either a label or register
+                    // name. Note that we can only have up to one
+                    // label per deref expression, and we can only
+                    // have up to one register per deref expression.
+                    if(expTokenS.equals("+")) {
+                        if(register == ValueType.SP) {
+                            register = ValueType.POP;
                         } else {
-                            type = ValueType.valueOf(secondS).dereferenceNextPlus();
-                            if(is_digit(fourthS.charAt(0))) {
-                                data = new UnresolvedData(parseIntToken(fourth));
-                            } else {
-                                data = parseLabelToken(fourth);
-                            }
+                            throw new TokenCompileError("Invalid dereference expression", expToken);
                         }
                     } else {
-                        // We're processing something like "[somelabel+B]"
-                        type = ValueType.valueOf(fourthS).dereferenceNextPlus();
+                        try {
+                            ValueType temp = ValueType.valueOf(expTokenS);
+                            if(register != null)
+                                throw new TokenCompileError("Can not have multiple registers in dereference expression", expToken);
+                            register = temp;
+                        } catch (IllegalArgumentException e) {
+                            // This token is a label and not a register.
+                            if(labelRef != null)
+                                throw new TokenCompileError("Can not have multiple labels in dereference expression", expToken);
+                            labelRef = expTokenS;
+                        }
                     }
-                    Token close = tokensI.next();
-                    if(!close.getValue().equals("]"))
-                        throw new TokenCompileError("Expected closing bracket", close);
-                    return new Value(type, data);
+                }
+                // Now we have either a + or ] coming up.
+                Token sepToken = tokensI.next();
+                String sepTokenS = sepToken.getValue();
+                if(sepTokenS.equals("]")) {
+                    break;
+                } else if(sepTokenS.equals("+")) {
+                    continue;
                 } else {
-                    throw new TokenCompileError("Expected '+' or ']'", third);
+                    throw new TokenCompileError("Expected a ']' or '+'", sepToken);
+                }
+            }
+            if(register == null) {
+                if(labelRef == null) {
+                    return new Value(ValueType.DN, new UnresolvedData(offset));
+                } else {
+                    return new Value(ValueType.DN, new UnresolvedOffset(labelRef, offset));
+                }
+            } else {
+                if(register == ValueType.POP || register == ValueType.PUSH) {
+                    if(labelRef == null && offset == 0) {
+                        return new Value(register);
+                    } else {
+                        throw new TokenCompileError("Invalid dereference expression", first);
+                    }
+                }
+                if(labelRef == null && offset == 0) {
+                    register = register.dereference();
+                    return new Value(register);
+                } else {
+                    register = register.dereferenceNextPlus();
+                    if(labelRef == null) {
+                        assert(offset != 0);
+                        return new Value(register, new UnresolvedData(offset));
+                    } else {
+                        return new Value(register, new UnresolvedOffset(labelRef, offset));
+                    }
                 }
             }
         }
