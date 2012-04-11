@@ -18,7 +18,10 @@ public class AssemblerLauncher {
         for(int i=0; i<args.length; i++) {
             switch(args[i].charAt(0)) {
             case '-':
-                if(args[i].equals("-h") || args[i].equals("--help")) {
+                if(args[i].length() == 1) {
+                    // Just "-" represents stdin or stdout
+                    argsList.add(args[i]);
+                } else if(args[i].equals("-h") || args[i].equals("--help")) {
                     usage();
                     return;
                 } else if(args[i].equals("--no-optimizations")) {

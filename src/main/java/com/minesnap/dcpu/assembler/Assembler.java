@@ -38,8 +38,16 @@ public class Assembler {
 
     public void assemble(String filename, String outname)
         throws FileNotFoundException, CompileError, IOException {
-        File sourcefile = new File(filename);
-        Scanner sc = new Scanner(sourcefile, "UTF-8");
+        File sourceDir;
+        Scanner sc;
+        if(filename.equals("-")) {
+            sourceDir = new File(".");
+            sc = new Scanner(System.in, "UTF-8");
+        } else {
+            File sourcefile = new File(filename);
+            sourceDir = sourcefile.getParentFile();
+            sc = new Scanner(sourcefile, "UTF-8");
+        }
         List<Token> tokens = ASMTokenizer.tokenize(sc, filename);
         sc.close();
         ResolverList resolvables = new ResolverList();
@@ -186,7 +194,7 @@ public class Assembler {
                     throw new TokenCompileError("Expected string for filename", incfilenameToken);
                 }
                 String incfilename = incfilenameS.substring(1, incfilenameS.length()-1);
-                File incfile = new File(sourcefile.getParentFile(), incfilename);
+                File incfile = new File(sourceDir, incfilename);
 
                 Token typeToken = tokensI.next();
                 String typeS = typeToken.getValue().toUpperCase();
@@ -246,7 +254,12 @@ public class Assembler {
             }
         }
         resolvables.prepare();
-        WordWriter out = new WordWriter(new FileOutputStream(outname, false), littleEndian);
+        WordWriter out;
+        if(outname.equals("-")) {
+            out = new WordWriter(System.out, littleEndian);
+        } else {
+            out = new WordWriter(new FileOutputStream(outname, false), littleEndian);
+        }
         try {
             resolvables.writeTo(out);
         } finally {
