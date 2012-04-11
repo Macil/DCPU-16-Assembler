@@ -18,6 +18,9 @@ public class UnresolvedData implements Resolvable {
     }
 
     public UnresolvedData(String reference) {
+        if(reference == null)
+            throw new IllegalArgumentException("Reference may not be null when using reference constructor");
+
         this.word = null;
         this.reference = reference.toUpperCase();
     }

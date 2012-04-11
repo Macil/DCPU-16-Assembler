@@ -259,19 +259,51 @@ public class Assembler {
         throws TokenCompileError {
         Token first = tokensI.next();
         if(!first.getValue().equals("[")) {
-            if(is_digit(first.getValue().charAt(0))) {
-                // We're processing something like "3"
-                return new Value(ValueType.LITERAL, new UnresolvedData(parseIntToken(first)));
-            } else {
-                String firstS = first.getValue().toUpperCase();
-                try {
-                    // We're processing something like "B"
-                    ValueType type = ValueType.valueOf(firstS);
-                    return new Value(type);
-                } catch (IllegalArgumentException e) {
-                    // Wait, we're processing something like "somelabel"
-                    return new Value(ValueType.LITERAL, parseLabelToken(first));
+            // We're about to process some expression that is the name
+            // of a register, or is an arbitrary amount of numbers
+            // added together optionally added to a label.
+            int offset = 0;
+            String labelRef = null;
+
+            Token expToken = first;
+            while(true) {
+                String expTokenS = expToken.getValue().toUpperCase();
+                if(expTokenS.equals("\n") || expTokenS.equals(",")) {
+                    throw new TokenCompileError("Was not expecting symbol", expToken);
                 }
+                if(is_digit(expTokenS.charAt(0))) {
+                    offset += parseIntToken(expToken);
+                } else {
+                    try {
+                        ValueType register = ValueType.valueOf(expTokenS);
+                        if(offset != 0 || labelRef != null)
+                            throw new TokenCompileError("Can not add register in literal", expToken);
+                        return new Value(register);
+                    } catch (IllegalArgumentException e) {
+                        // This token is a label and not a register.
+                        if(labelRef != null)
+                            throw new TokenCompileError("Can not have multiple labels in expression", expToken);
+                        labelRef = expTokenS;
+                    }
+                }
+                // Now we have either a '+', ',' or '\n' coming up.
+                Token sepToken = tokensI.next();
+                String sepTokenS = sepToken.getValue();
+                if(sepTokenS.equals(",") || sepTokenS.equals("\n")) {
+                    // Put that token back for the caller to process.
+                    tokensI.previous();
+                    break;
+                } else if(sepTokenS.equals("+")) {
+                    expToken = tokensI.next();
+                    continue;
+                } else {
+                    throw new TokenCompileError("Expected a '+', ',' or '\\n'", sepToken);
+                }
+            }
+            if(labelRef == null) {
+                return new Value(ValueType.LITERAL, new UnresolvedData(offset));
+            } else {
+                return new Value(ValueType.LITERAL, new UnresolvedOffset(labelRef, offset));
             }
         } else {
             // We're about to process some dereference expression like
