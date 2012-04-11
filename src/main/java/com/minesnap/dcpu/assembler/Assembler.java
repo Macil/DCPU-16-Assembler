@@ -151,11 +151,9 @@ public class Assembler {
                         for(int k=0; k<bytes.length; k+=2) {
                             dataList.add(new UnresolvedData(bytes[k] | (bytes[k+1]<<8)));
                         }
-                    } else if(is_digit(firstChar)) {
-                        int number = parseIntToken(dataToken);
-                        dataList.add(new UnresolvedData(number));
                     } else {
-                        dataList.add(parseLabelToken(dataToken));
+                        tokensI.previous();
+                        dataList.add(parseLiteralExpression(tokensI));
                     }
                 }
 
@@ -174,14 +172,7 @@ public class Assembler {
             }
             case JMP:
             {
-                Token next = tokensI.next();
-                String nextS = next.getValue();
-                UnresolvedData data;
-                if(is_digit(nextS.charAt(0))) {
-                    data = new UnresolvedData(parseIntToken(next));
-                } else {
-                    data = parseLabelToken(next);
-                }
+                UnresolvedData data = parseLiteralExpression(tokensI);
                 JMPInstruction jmp = new JMPInstruction(data);
                 resolvables.add(jmp);
                 break;
@@ -267,6 +258,50 @@ public class Assembler {
         }
     }
 
+    private static UnresolvedData parseLiteralExpression(ListIterator<Token> tokensI)
+        throws TokenCompileError {
+        int offset = 0;
+        String labelRef = null;
+
+        while(true) {
+            Token expToken = tokensI.next();
+            String expTokenS = expToken.getValue().toUpperCase();
+            if(expTokenS.equals("\n") || expTokenS.equals(",")) {
+                throw new TokenCompileError("Was not expecting symbol", expToken);
+            }
+            if(is_digit(expTokenS.charAt(0))) {
+                offset += parseIntToken(expToken);
+            } else {
+                try {
+                    ValueType register = ValueType.valueOf(expTokenS);
+                    throw new TokenCompileError("Can not add register in literal", expToken);
+                } catch (IllegalArgumentException e) {
+                    // This token is a label and not a register.
+                    if(labelRef != null)
+                        throw new TokenCompileError("Can not have multiple labels in expression", expToken);
+                    labelRef = expTokenS;
+                }
+            }
+            // Now we have either a '+', ',' or '\n' coming up.
+            Token sepToken = tokensI.next();
+            String sepTokenS = sepToken.getValue();
+            if(sepTokenS.equals(",") || sepTokenS.equals("\n")) {
+                // Put that token back for the caller to process.
+                tokensI.previous();
+                break;
+            } else if(sepTokenS.equals("+")) {
+                continue;
+            } else {
+                throw new TokenCompileError("Expected a '+', ',' or '\\n'", sepToken);
+            }
+        }
+        if(labelRef == null) {
+            return new UnresolvedData(offset);
+        } else {
+            return new UnresolvedOffset(labelRef, offset);
+        }
+    }
+
     // Returns the value that must be passed to Instruction.setValueA or B
     private static Value parseValueTokens(ListIterator<Token> tokensI)
         throws TokenCompileError {
@@ -275,53 +310,23 @@ public class Assembler {
             // We're about to process some expression that is the name
             // of a register, or is an arbitrary amount of numbers
             // added together optionally added to a label.
-            int offset = 0;
-            String labelRef = null;
-
-            Token expToken = first;
-            while(true) {
-                String expTokenS = expToken.getValue().toUpperCase();
-                if(expTokenS.equals("\n") || expTokenS.equals(",")) {
-                    throw new TokenCompileError("Was not expecting symbol", expToken);
-                }
-                if(is_digit(expTokenS.charAt(0))) {
-                    offset += parseIntToken(expToken);
-                } else {
-                    try {
-                        ValueType register = ValueType.valueOf(expTokenS);
-                        if(offset != 0 || labelRef != null)
-                            throw new TokenCompileError("Can not add register in literal", expToken);
-                        return new Value(register);
-                    } catch (IllegalArgumentException e) {
-                        // This token is a label and not a register.
-                        if(labelRef != null)
-                            throw new TokenCompileError("Can not have multiple labels in expression", expToken);
-                        labelRef = expTokenS;
-                    }
-                }
-                // Now we have either a '+', ',' or '\n' coming up.
-                Token sepToken = tokensI.next();
-                String sepTokenS = sepToken.getValue();
-                if(sepTokenS.equals(",") || sepTokenS.equals("\n")) {
-                    // Put that token back for the caller to process.
-                    tokensI.previous();
-                    break;
-                } else if(sepTokenS.equals("+")) {
-                    expToken = tokensI.next();
-                    continue;
-                } else {
-                    throw new TokenCompileError("Expected a '+', ',' or '\\n'", sepToken);
-                }
-            }
-            if(labelRef == null) {
-                return new Value(ValueType.LITERAL, new UnresolvedData(offset));
-            } else {
-                return new Value(ValueType.LITERAL, new UnresolvedOffset(labelRef, offset));
+            String firstS = first.getValue().toUpperCase();
+            try {
+                ValueType register = ValueType.valueOf(firstS);
+                return new Value(register);
+            } catch (IllegalArgumentException e) {
+                // If it wasn't a register, then it's some literal
+                // expression.
+                tokensI.previous();
+                UnresolvedData data = parseLiteralExpression(tokensI);
+                return new Value(ValueType.LITERAL, data);
             }
         } else {
             // We're about to process some dereference expression like
             // [--SP], [SP++], [B], [B+3], [somelabel+B],
-            // [somelabel+1], [somelabel+B+1], etc.
+            // [somelabel+1], [somelabel+B+1], etc. Note that we don't
+            // use parseLiteralExpression because this expression can
+            // have a single register in it.
             int offset = 0;
             ValueType register = null;
             String labelRef = null;
@@ -409,15 +414,6 @@ public class Assembler {
     private static final String digits = "-0123456789";
     private static boolean is_digit(char c) {
         return digits.indexOf(c) != -1;
-    }
-
-    private static UnresolvedData parseLabelToken(Token token)
-        throws TokenCompileError {
-        String tokenS = token.getValue();
-        if(tokenS.equals("\n")) {
-            throw new TokenCompileError("Was not expecting newline", token);
-        }
-        return new UnresolvedData(tokenS);
     }
 
     private static int parseIntToken(Token token)
