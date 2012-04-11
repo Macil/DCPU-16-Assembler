@@ -5,10 +5,11 @@ This is an assembler for the DCPU-16 architecture as designed by
 Notch. This implements version 1.1 of the standard available at
 http://0x10c.com/doc/dcpu-16.txt
 
-This assembler also supports the DAT/DATA, BRK, JMP, RESERVE/.DS, and
-TIMES/DUP meta-instructions that work on all DCPU-16 implementations,
-and it allows the user to specify custom new non-basic opcode
-instructions for use with supporting DCPU-16 implementations.
+This assembler also supports the DAT/DATA, BRK, JMP, RESERVE/.DS,
+TIMES/DUP, and .INCBIN meta-instructions that work on all DCPU-16
+implementations, and it allows the user to specify custom new
+non-basic opcode instructions for use with supporting DCPU-16
+implementations.
 
 The DAT or DATA instruction is followed by data to put directly in the
 compiled binary. This data is a comma-delimited list of strings,
@@ -32,6 +33,17 @@ is equivalent to "DAT 0, 0, 0".
 The TIMES or DUP instruction can be used immediately before a DAT
 instruction with a number that tells how many times to repeat the DAT
 instruction. "TIMES 3 DAT 5" is equivalent to "DAT 5, 5, 5".
+
+The .INCBIN instruction is followed by a quoted filename of a file to
+include into the compiled binary at this location. The given pathname
+must be relative to the source file's path. It is then followed by an
+optional endianness specifier, "THIS" (default), "LE", or "BE". "THIS"
+specifies that the included file should be read in the same endianness
+that this source file is being compiled to, "LE" means it should be
+read in little endian form, and "BE" means it should be read in big
+endian form. If the file is included in the same endian form that the
+source file is being compiled to, then the contents of the file will
+exactly match what is written into the final binary.
 
 Custom NB-Opcodes
 -----------------

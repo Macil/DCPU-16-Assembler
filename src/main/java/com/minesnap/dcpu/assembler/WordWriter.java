@@ -7,9 +7,12 @@ public class WordWriter {
     private final OutputStream out;
     private final boolean littleEndian;
 
+    private long wordsWritten;
+
     public WordWriter(OutputStream out, boolean littleEndian) {
         this.out = out;
         this.littleEndian = littleEndian;
+        wordsWritten = 0;
     }
 
     public void writeWord(int word)
@@ -25,6 +28,11 @@ public class WordWriter {
             out.write((word & 0xff00) >> 8);
             out.write(word & 0x00ff);
         }
+        wordsWritten++;
+    }
+
+    public long getWordsWritten() {
+        return wordsWritten;
     }
 
     public void close()

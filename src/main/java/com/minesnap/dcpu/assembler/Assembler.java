@@ -38,7 +38,8 @@ public class Assembler {
 
     public void assemble(String filename, String outname)
         throws FileNotFoundException, CompileError, IOException {
-        Scanner sc = new Scanner(new File(filename), "UTF-8");
+        File sourcefile = new File(filename);
+        Scanner sc = new Scanner(sourcefile, "UTF-8");
         List<Token> tokens = ASMTokenizer.tokenize(sc, filename);
         sc.close();
         ResolverList resolvables = new ResolverList();
@@ -175,6 +176,43 @@ public class Assembler {
                 }
                 JMPInstruction jmp = new JMPInstruction(data);
                 resolvables.add(jmp);
+                break;
+            }
+            case INCBIN:
+            {
+                Token incfilenameToken = tokensI.next();
+                String incfilenameS = incfilenameToken.getValue();
+                if(incfilenameS.charAt(0) != '"' || incfilenameS.charAt(incfilenameS.length()-1) != '"') {
+                    throw new TokenCompileError("Expected string for filename", incfilenameToken);
+                }
+                String incfilename = incfilenameS.substring(1, incfilenameS.length()-1);
+                File incfile = new File(sourcefile.getParentFile(), incfilename);
+
+                Token typeToken = tokensI.next();
+                String typeS = typeToken.getValue().toUpperCase();
+                boolean incLittleEndian;
+                if(typeS.equals("\n")) {
+                    // Put the newline back so that way it's detected
+                    // later properly.
+                    tokensI.previous();
+                    // Default to whatever this file is using
+                    typeS = "THIS";
+                }
+                if(typeS.equals("THIS")) {
+                    incLittleEndian = littleEndian;
+                } else if(typeS.equals("BE")) {
+                    incLittleEndian = false;
+                } else if(typeS.equals("LE")) {
+                    incLittleEndian = true;
+                } else {
+                    throw new TokenCompileError("Unknown endian type", typeToken);
+                }
+
+                try {
+                    resolvables.add(new BinInclude(incfile, incLittleEndian));
+                } catch(IllegalIncludeException e) {
+                    throw new TokenCompileError(e.getMessage(), incfilenameToken);
+                }
                 break;
             }
             default:
