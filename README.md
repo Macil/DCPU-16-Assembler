@@ -27,12 +27,12 @@ are enabled (which they are by default), then all eligible uses of
 optimization.
 
 The RESERVE or .DS instruction takes one integer argument specifying
-how many words of zeroes to reserve in memory at its location. ".DS 3"
-is equivalent to "DAT 0, 0, 0".
+how many words of zeroes to reserve in memory at its location. `.DS 3`
+is equivalent to `DAT 0, 0, 0`.
 
 The TIMES or DUP instruction can be used immediately before a DAT
 instruction with a number that tells how many times to repeat the DAT
-instruction. "TIMES 3 DAT 5" is equivalent to "DAT 5, 5, 5".
+instruction. `TIMES 3 DAT 5` is equivalent to `DAT 5, 5, 5`.
 
 The .INCBIN instruction is followed by a quoted filename of a file to
 include into the compiled binary at this location. The given pathname
@@ -43,7 +43,8 @@ that this source file is being compiled to, "LE" means it should be
 read in little endian form, and "BE" means it should be read in big
 endian form. If the file is included in the same endian form that the
 source file is being compiled to, then the contents of the file will
-exactly match what is written into the final binary.
+exactly match what is written into the final binary. Example usage:
+`.incbin "some file.bin" le`
 
 Custom NB-Opcodes
 -----------------
