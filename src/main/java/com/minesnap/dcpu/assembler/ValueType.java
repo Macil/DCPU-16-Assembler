@@ -71,13 +71,15 @@ public enum ValueType {
     public ValueType dereference() {
         if(code >= A.code && code <= J.code)
             return getByCode((byte)(code+0x8));
-        return null;
+        if(this == ValueType.SP)
+            return ValueType.PEEK;
+        throw new IllegalStateException("Can not dereference type "+this);
     }
 
     public ValueType dereferenceNextPlus() {
         if(code >= A.code && code <= J.code)
             return getByCode((byte)(code+0x10));
-        return null;
+        throw new IllegalStateException("Can not dereference+plus type "+this);
     }
 
     public static ValueType getByCode(byte code) {

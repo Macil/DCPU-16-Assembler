@@ -238,13 +238,17 @@ public class Assembler {
         } else {
             Token second = tokensI.next();
             if(is_digit(second.getValue().charAt(0))) {
-                int number = parseIntToken(second);
                 Token third = tokensI.next();
                 if(third.getValue().equals("]")) {
+                    if(second.getValue().equals("--SP")) {
+                        return new Value(ValueType.PUSH);
+                    }
                     // We're processing something like "[3]"
+                    int number = parseIntToken(second);
                     return new Value(ValueType.DN, new UnresolvedData(number));
                 } else if(third.getValue().equals("+")) {
                     // We're processing something like "[3+B]"
+                    int number = parseIntToken(second);
                     Token fourth = tokensI.next();
                     String fourthS = fourth.getValue().toUpperCase();
                     ValueType type = ValueType.valueOf(fourthS).dereferenceNextPlus();
@@ -273,11 +277,21 @@ public class Assembler {
                     String fourthS = fourth.getValue().toUpperCase();
                     if(data == null) {
                         // We're processing something like "[B+3]" or "[B+somelabel]"
-                        type = ValueType.valueOf(secondS).dereferenceNextPlus();
-                        if(is_digit(fourthS.charAt(0))) {
-                            data = new UnresolvedData(parseIntToken(fourth));
+                        if(fourthS.equals("+")) {
+                            // Nope, we're processing something like "[B++]".
+                            // Note that [SP] (PEEK) is the only thing we can process like this.
+                            if(type == ValueType.PEEK) {
+                                type = ValueType.POP;
+                            } else {
+                                throw new TokenCompileError("Can not increment type "+type, second);
+                            }
                         } else {
-                            data = parseLabelToken(fourth);
+                            type = ValueType.valueOf(secondS).dereferenceNextPlus();
+                            if(is_digit(fourthS.charAt(0))) {
+                                data = new UnresolvedData(parseIntToken(fourth));
+                            } else {
+                                data = parseLabelToken(fourth);
+                            }
                         }
                     } else {
                         // We're processing something like "[somelabel+B]"

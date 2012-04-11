@@ -11,6 +11,8 @@ public class Value {
     }
 
     public Value(ValueType type, UnresolvedData data) {
+        if(type == null)
+            throw new IllegalArgumentException("ValueType may not be null");
         if(data == null && type.hasLiteral())
             throw new IllegalArgumentException("Given ValueType requires data");
         if(data != null && !type.hasLiteral())
