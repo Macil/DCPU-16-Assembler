@@ -70,6 +70,9 @@ public class Assembler {
                 else
                     label = opterm.substring(0, opterm.length()-1);
 
+                if(!is_legal_label(label))
+                    throw new TokenCompileError("Is not a legal label name", opToken);
+
                 try {
                     resolvables.addLabel(label);
                 } catch (LabelAlreadyExistsError e) {
@@ -277,6 +280,8 @@ public class Assembler {
                     throw new TokenCompileError("Can not add register in literal", expToken);
                 } catch (IllegalArgumentException e) {
                     // This token is a label and not a register.
+                    if(!is_legal_label(expTokenS))
+                        throw new TokenCompileError("Is not a legal label name", expToken);
                     if(labelRef != null)
                         throw new TokenCompileError("Can not have multiple labels in expression", expToken);
                     labelRef = expTokenS;
@@ -363,6 +368,8 @@ public class Assembler {
                             register = temp;
                         } catch (IllegalArgumentException e) {
                             // This token is a label and not a register.
+                            if(!is_legal_label(expTokenS))
+                                throw new TokenCompileError("Is not a legal label name", expToken);
                             if(labelRef != null)
                                 throw new TokenCompileError("Can not have multiple labels in dereference expression", expToken);
                             labelRef = expTokenS;
@@ -409,6 +416,19 @@ public class Assembler {
             }
         }
         
+    }
+
+    private static final String label_bad_chars = "+*-/\\,:; \r\t\n[](){}\"`'";
+    private static boolean is_legal_label(String label) {
+        if(label == null)
+            throw new IllegalArgumentException("Label can't be null");
+
+        int len = label.length();
+        for(int i=0; i<len; i++) {
+            if(label_bad_chars.indexOf(label.charAt(i)) != -1)
+                return false;
+        }
+        return true;
     }
 
     private static final String digits = "-0123456789";
