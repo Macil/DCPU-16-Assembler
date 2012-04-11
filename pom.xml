@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.minesnap.dcpu</groupId>
   <artifactId>assembler</artifactId>
-  <version>1.5-SNAPSHOT</version>
+  <version>1.5</version>
   <name>DCPU16Assembler</name>
   <description>Assembler for Notch's DCPU-16
   Architecture.</description>
