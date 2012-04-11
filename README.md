@@ -16,14 +16,14 @@ compiled binary. This data is a comma-delimited list of strings,
 characters, integers, and address labels.
 
 The BRK instruction signals for the program to end. Currently this
-compiles to the same code that "SUB PC, 1" does.
+compiles to the same code that `SUB PC, 1` does.
 
 The JMP instruction takes one argument: a label or address to jump
-to. It is equivalent to using "SET PC, value", except that it will
-automatically be replaced by "ADD PC, delta" or "SUB PC, delta" if it
+to. It is equivalent to using `SET PC, value`, except that it will
+automatically be replaced by `ADD PC, delta` or `SUB PC, delta` if it
 is found that those instructions would be shorter. If optimizations
 are enabled (which they are by default), then all eligible uses of
-"SET PC, value" in the source file will also be considered for this
+`SET PC, value` in the source file will also be considered for this
 optimization.
 
 The RESERVE or .DS instruction takes one integer argument specifying

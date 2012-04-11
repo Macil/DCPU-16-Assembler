@@ -21,11 +21,11 @@ public enum OpcodeType {
         IFG(0xe),
         IFB(0xf),
 
-        DAT(null, "DATA"),
+        DAT(null, "DATA", ".DAT", ".DW"),
         JMP,
         BRK,
         TIMES(null, "DUP"),
-        RESERVE(null, ".DS"),
+        RESERVE(null, ".DS", ".RESERVE"),
         INCBIN(null, ".INCBIN"),
 
         JSR(0x10),
