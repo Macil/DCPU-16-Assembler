@@ -45,7 +45,7 @@ public class Util {
             } else {
                 switch(c) {
                 case '"':
-                    sb.append('"');
+                    sb.append("\\\"");
                     break;
                 case '\\':
                     sb.append("\\\\");
