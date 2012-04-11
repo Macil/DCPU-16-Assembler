@@ -1,3 +1,7 @@
+(2012/04/11) - v1.6
+- Added: Support for constant arithmetic expressions in values.
+- Added: Support for standard input and output.
+
 (2012/04/11) - v1.5
 - Added: Added support for [SP++], [SP], and [--SP] as alternatives
   to POP, PEEK, and PUSH.

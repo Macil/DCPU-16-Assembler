@@ -18,6 +18,22 @@ implementations, and it allows the user to specify custom new
 non-basic opcode instructions for use with supporting DCPU-16
 implementations.
 
+Simple constant arithmetic expressions are supported in instruction
+arguments. The following example code assembles fine:
+
+    :somelabel
+        set a, [somelabel+1+b+5]
+        dat 10, 10+5, 1+somelabel+0, 0
+        jmp 5+somelabel
+
+Meta-Instructions
+-----------------
+
+Meta-instructions (or assembler directives) aren't actual instructions
+that are understood by the DCPU-16 architecture. They stand in for
+real instructions, or provide a way to place specific data into the
+compiled binary.
+
 The DAT or DATA instruction is followed by data to put directly in the
 compiled binary. This data is a comma-delimited list of strings,
 characters, integers, and address labels.
@@ -125,6 +141,9 @@ By default, the compiled binary will be written to a file named
 argument:
 
     java -jar DCPU16Assembler.jar myprogram.asm myprogram.bin
+
+Standard input or standard output can be used as the source file or
+output respectively by putting a - instead of a filename.
 
 The -h/--help option can be given to show the usage instructions and
 list of options, and the --no-optimizations option can be given to
