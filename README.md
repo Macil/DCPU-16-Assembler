@@ -5,6 +5,13 @@ This is an assembler for the DCPU-16 architecture as designed by
 Notch. This implements version 1.1 of the standard available at
 http://0x10c.com/doc/dcpu-16.txt
 
+This assembler correctly supports short form labels, and it
+automatically optimizes jump calls (`SET PC, value`) to shorter
+instructions if possible. This means that the compiled binaries that
+this assembler produces are often slightly smaller and run in fewer
+cycles than binaries produced by other assemblers given the same
+source assembly.
+
 This assembler also supports the DAT/DATA, BRK, JMP, RESERVE/.DS,
 TIMES/DUP, and .INCBIN meta-instructions that work on all DCPU-16
 implementations, and it allows the user to specify custom new
