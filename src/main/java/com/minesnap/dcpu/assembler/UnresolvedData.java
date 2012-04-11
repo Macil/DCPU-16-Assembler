@@ -1,11 +1,8 @@
 package com.minesnap.dcpu.assembler;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Map;
-import java.util.Collections;
 import java.util.List;
-import java.util.ArrayList;
 
 // Contains either a 16-bit word of data, or a symbol reference.
 public class UnresolvedData implements Resolvable {
