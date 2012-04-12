@@ -57,10 +57,6 @@ public class Assembler {
             in.close();
         }
 
-        for(Token token : tokens) {
-            System.out.println(token);
-        }
-
         ResolverList resolvables = new ResolverList();
         ListIterator<Token> tokensI = tokens.listIterator();
         boolean newlineRequired = false;
@@ -73,19 +69,10 @@ public class Assembler {
             }
 
             // Handle labels
-            String opterm = opToken.getText().toUpperCase();
-            if(opterm.charAt(0)==':' || opterm.charAt(opterm.length()-1)==':') {
-                String label;
-                if(opterm.charAt(0)==':')
-                    label = opterm.substring(1);
-                else
-                    label = opterm.substring(0, opterm.length()-1);
-
-                if(!is_legal_label(label))
-                    throw new TokenCompileError("Is not a legal label name", opToken);
-
+            String opterm = opToken.getText();
+            if(opToken instanceof LabelToken) {
                 try {
-                    resolvables.addLabel(label);
+                    resolvables.addLabel(((LabelToken)opToken).getName());
                 } catch (LabelAlreadyExistsError e) {
                     throw new TokenCompileError("Duplicate label found", opToken);
                 }
@@ -111,7 +98,12 @@ public class Assembler {
             case RESERVE:
             {
                 Token countToken = tokensI.next();
-                int count = parseIntToken(countToken);
+                int count;
+                if(countToken instanceof IntToken) {
+                    count = ((IntToken)countToken).getValue();
+                } else {
+                    throw new TokenCompileError("Expected integer", countToken);
+                }
 
                 List<UnresolvedData> dataList = new ArrayList<UnresolvedData>(1);
                 dataList.add(new UnresolvedData(0));
@@ -122,10 +114,14 @@ public class Assembler {
             case TIMES:
             {
                 Token countToken = tokensI.next();
-                datRepeat = parseIntToken(countToken);
+                if(countToken instanceof IntToken) {
+                    datRepeat = ((IntToken)countToken).getValue();
+                } else {
+                    throw new TokenCompileError("Expected integer", countToken);
+                }
 
                 opToken = tokensI.next();
-                opterm = opToken.getText().toUpperCase();
+                opterm = opToken.getText();
                 opcode = Opcode.getByName(opterm, newNBOpcodes);
                 if(opcode == null) {
                     throw new TokenCompileError("Unknown opcode", opToken);
@@ -192,15 +188,14 @@ public class Assembler {
             case INCBIN:
             {
                 Token incfilenameToken = tokensI.next();
-                String incfilenameS = incfilenameToken.getText();
-                if(incfilenameS.charAt(0) != '"' || incfilenameS.charAt(incfilenameS.length()-1) != '"') {
+                if(!(incfilenameToken instanceof StringToken)) {
                     throw new TokenCompileError("Expected string for filename", incfilenameToken);
                 }
-                String incfilename = incfilenameS.substring(1, incfilenameS.length()-1);
+                String incfilename = ((StringToken)incfilenameToken).getValue();
                 File incfile = new File(sourceDir, incfilename);
 
                 Token typeToken = tokensI.next();
-                String typeS = typeToken.getText().toUpperCase();
+                String typeS = typeToken.getText();
                 boolean incLittleEndian;
                 if(typeS.equals("\n")) {
                     // Put the newline back so that way it's detected
@@ -277,19 +272,19 @@ public class Assembler {
 
         while(true) {
             Token expToken = tokensI.next();
-            String expTokenS = expToken.getText().toUpperCase();
-            if(expTokenS.equals("\n") || expTokenS.equals(",")) {
+            String expTokenS = expToken.getText();
+            if(expToken instanceof SymbolToken) {
                 throw new TokenCompileError("Was not expecting symbol", expToken);
             }
-            if(is_digit(expTokenS.charAt(0))) {
-                offset += parseIntToken(expToken);
+            if(expToken instanceof IntToken) {
+                offset += ((IntToken)expToken).getValue();
             } else {
                 try {
                     ValueType register = ValueType.valueOf(expTokenS);
                     throw new TokenCompileError("Can not add register in literal", expToken);
                 } catch (IllegalArgumentException e) {
                     // This token is a label and not a register.
-                    if(!is_legal_label(expTokenS))
+                    if(!ASMTokenizer.is_legal_label(expTokenS))
                         throw new TokenCompileError("Is not a legal label name", expToken);
                     if(labelRef != null)
                         throw new TokenCompileError("Can not have multiple labels in expression", expToken);
@@ -324,7 +319,7 @@ public class Assembler {
             // We're about to process some expression that is the name
             // of a register, or is an arbitrary amount of numbers
             // added together optionally added to a label.
-            String firstS = first.getText().toUpperCase();
+            String firstS = first.getText();
             try {
                 ValueType register = ValueType.valueOf(firstS);
                 return new Value(register);
@@ -350,20 +345,18 @@ public class Assembler {
                 if(expTokenS.equals("\n")) {
                     throw new TokenCompileError("Was not expecting newline", expToken);
                 }
-                if(is_digit(expTokenS.charAt(0))) {
-                    if(expTokenS.equals("--SP")) {
-                        if(register != null)
-                            throw new TokenCompileError("Invalid dereference expression", expToken);
-                        register = ValueType.PUSH;
-                    } else {
-                        offset += parseIntToken(expToken);
-                    }
+                if(expToken instanceof IntToken) {
+                    offset += ((IntToken)expToken).getValue();
                 } else {
                     // This token is either a label or register
                     // name. Note that we can only have up to one
                     // label per deref expression, and we can only
                     // have up to one register per deref expression.
-                    if(expTokenS.equals("+")) {
+                    if(expTokenS.equals("--SP")) {
+                        if(register != null)
+                            throw new TokenCompileError("Invalid dereference expression", expToken);
+                        register = ValueType.PUSH;
+                    } else if(expTokenS.equals("+")) {
                         if(register == ValueType.SP) {
                             register = ValueType.POP;
                         } else {
@@ -377,7 +370,7 @@ public class Assembler {
                             register = temp;
                         } catch (IllegalArgumentException e) {
                             // This token is a label and not a register.
-                            if(!is_legal_label(expTokenS))
+                            if(!ASMTokenizer.is_legal_label(expTokenS))
                                 throw new TokenCompileError("Is not a legal label name", expToken);
                             if(labelRef != null)
                                 throw new TokenCompileError("Can not have multiple labels in dereference expression", expToken);
@@ -424,71 +417,5 @@ public class Assembler {
                 }
             }
         }
-        
-    }
-
-    private static final String label_bad_chars = "+*-/\\,:; \r\t\n[](){}\"`'";
-    private static boolean is_legal_label(String label) {
-        if(label == null)
-            throw new IllegalArgumentException("Label can't be null");
-
-        int len = label.length();
-        for(int i=0; i<len; i++) {
-            if(label_bad_chars.indexOf(label.charAt(i)) != -1)
-                return false;
-        }
-        return true;
-    }
-
-    private static final String digits = "-0123456789";
-    private static boolean is_digit(char c) {
-        return digits.indexOf(c) != -1;
-    }
-
-    private static int parseIntToken(Token token)
-        throws TokenCompileError {
-        int number;
-        try {
-            number = parseInt(token.getText());
-        } catch (NumberFormatException e) {
-            throw new TokenCompileError("Invalid number", token);
-        }
-        int hibyte = number & 0xffff0000;
-        if(hibyte != 0) {
-            // We need to make sure that number isn't just negative
-            // and within bounds.
-            if(hibyte != 0xffff0000 || (number & 0x8000) != 0x8000) {
-                throw new TokenCompileError("Number can't fit in two byte word", token);
-            }
-        }
-        number &= 0xffff;
-        return number;
-    }
-
-    private static int parseInt(String value)
-        throws NumberFormatException {
-
-        int ivalue;
-        boolean isNegative = false;
-        value = value.toUpperCase();
-
-        if(value.startsWith("-")) {
-            isNegative = true;
-            value = value.substring(1);
-            if(value.length() == 0) {
-                throw new NumberFormatException();
-            }
-        }
-        if(value.startsWith("0X") || value.startsWith("0H")) {
-            ivalue = Integer.parseInt(value.substring(2), 16);
-        } else if(value.startsWith("0B")) {
-            ivalue = Integer.parseInt(value.substring(2), 2);
-        } else {
-            ivalue = Integer.parseInt(value, 10);
-        }
-        if(isNegative) {
-            ivalue = -ivalue;
-        }
-        return ivalue;
     }
 }
