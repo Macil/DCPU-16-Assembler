@@ -56,13 +56,13 @@ public class Assembler {
         while(tokensI.hasNext()) {
             Token opToken = tokensI.next();
 
-            if(opToken.getValue().equals("\n")) {
+            if(opToken.getText().equals("\n")) {
                 newlineRequired = false;
                 continue;
             }
 
             // Handle labels
-            String opterm = opToken.getValue().toUpperCase();
+            String opterm = opToken.getText().toUpperCase();
             if(opterm.charAt(0)==':' || opterm.charAt(opterm.length()-1)==':') {
                 String label;
                 if(opterm.charAt(0)==':')
@@ -114,7 +114,7 @@ public class Assembler {
                 datRepeat = parseIntToken(countToken);
 
                 opToken = tokensI.next();
-                opterm = opToken.getValue().toUpperCase();
+                opterm = opToken.getText().toUpperCase();
                 opcode = Opcode.getByName(opterm, newNBOpcodes);
                 if(opcode == null) {
                     throw new TokenCompileError("Unknown opcode", opToken);
@@ -133,21 +133,21 @@ public class Assembler {
                 while(tokensI.hasNext()) {
                     if(!isFirst) {
                         Token comma = tokensI.next();
-                        if(comma.getValue().equals("\n")) {
+                        if(comma.getText().equals("\n")) {
                             // Put the newline back so that way it's
                             // detected later properly.
                             tokensI.previous();
                             break;
-                        } else if(!comma.getValue().equals(",")) {
+                        } else if(!comma.getText().equals(",")) {
                             throw new TokenCompileError("Expected comma", comma);
                         }
                     } else {
                         isFirst = false;
                     }
                     Token dataToken = tokensI.next();
-                    char firstChar = dataToken.getValue().charAt(0);
+                    char firstChar = dataToken.getText().charAt(0);
                     if(firstChar=='"') {
-                        String full = dataToken.getValue();
+                        String full = dataToken.getText();
                         String quoted = full.substring(1, full.length()-1);
                         byte[] bytes = quoted.getBytes(Charset.forName("UTF-16LE"));
                         assert(bytes.length%2 == 0);
@@ -183,7 +183,7 @@ public class Assembler {
             case INCBIN:
             {
                 Token incfilenameToken = tokensI.next();
-                String incfilenameS = incfilenameToken.getValue();
+                String incfilenameS = incfilenameToken.getText();
                 if(incfilenameS.charAt(0) != '"' || incfilenameS.charAt(incfilenameS.length()-1) != '"') {
                     throw new TokenCompileError("Expected string for filename", incfilenameToken);
                 }
@@ -191,7 +191,7 @@ public class Assembler {
                 File incfile = new File(sourceDir, incfilename);
 
                 Token typeToken = tokensI.next();
-                String typeS = typeToken.getValue().toUpperCase();
+                String typeS = typeToken.getText().toUpperCase();
                 boolean incLittleEndian;
                 if(typeS.equals("\n")) {
                     // Put the newline back so that way it's detected
@@ -224,7 +224,7 @@ public class Assembler {
                 // If this opcode has 2 arguments
                 if(opcode.isBasic()) {
                     Token comma = tokensI.next();
-                    if(!comma.getValue().equals(","))
+                    if(!comma.getText().equals(","))
                         throw new TokenCompileError("Expected comma", comma);
                     instr.setValueB(parseValueTokens(tokensI));
                 }
@@ -268,7 +268,7 @@ public class Assembler {
 
         while(true) {
             Token expToken = tokensI.next();
-            String expTokenS = expToken.getValue().toUpperCase();
+            String expTokenS = expToken.getText().toUpperCase();
             if(expTokenS.equals("\n") || expTokenS.equals(",")) {
                 throw new TokenCompileError("Was not expecting symbol", expToken);
             }
@@ -289,7 +289,7 @@ public class Assembler {
             }
             // Now we have either a '+', ',' or '\n' coming up.
             Token sepToken = tokensI.next();
-            String sepTokenS = sepToken.getValue();
+            String sepTokenS = sepToken.getText();
             if(sepTokenS.equals(",") || sepTokenS.equals("\n")) {
                 // Put that token back for the caller to process.
                 tokensI.previous();
@@ -311,11 +311,11 @@ public class Assembler {
     private static Value parseValueTokens(ListIterator<Token> tokensI)
         throws TokenCompileError {
         Token first = tokensI.next();
-        if(!first.getValue().equals("[")) {
+        if(!first.getText().equals("[")) {
             // We're about to process some expression that is the name
             // of a register, or is an arbitrary amount of numbers
             // added together optionally added to a label.
-            String firstS = first.getValue().toUpperCase();
+            String firstS = first.getText().toUpperCase();
             try {
                 ValueType register = ValueType.valueOf(firstS);
                 return new Value(register);
@@ -337,7 +337,7 @@ public class Assembler {
             String labelRef = null;
             while(true) {
                 Token expToken = tokensI.next();
-                String expTokenS = expToken.getValue().toUpperCase();
+                String expTokenS = expToken.getText().toUpperCase();
                 if(expTokenS.equals("\n")) {
                     throw new TokenCompileError("Was not expecting newline", expToken);
                 }
@@ -378,7 +378,7 @@ public class Assembler {
                 }
                 // Now we have either a + or ] coming up.
                 Token sepToken = tokensI.next();
-                String sepTokenS = sepToken.getValue();
+                String sepTokenS = sepToken.getText();
                 if(sepTokenS.equals("]")) {
                     break;
                 } else if(sepTokenS.equals("+")) {
@@ -440,7 +440,7 @@ public class Assembler {
         throws TokenCompileError {
         int number;
         try {
-            number = parseInt(token.getValue());
+            number = parseInt(token.getText());
         } catch (NumberFormatException e) {
             throw new TokenCompileError("Invalid number", token);
         }
