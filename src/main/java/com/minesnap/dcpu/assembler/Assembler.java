@@ -300,8 +300,14 @@ public class Assembler {
                 break;
             } else if(sepTokenS.equals("+")) {
                 continue;
+            } else if(sepToken instanceof IntToken
+                      && sepToken.getText().charAt(0) == '-') {
+                // If we hit a negative number, pretend there was a
+                // plus sign first.
+                tokensI.previous();
+                continue;
             } else {
-                throw new TokenCompileError("Expected a '+', ',' or '\\n'", sepToken);
+                throw new TokenCompileError("Expected a '+', '-', ',' or '\\n'", sepToken);
             }
         }
         if(labelRef == null) {
@@ -385,8 +391,14 @@ public class Assembler {
                     break;
                 } else if(sepTokenS.equals("+")) {
                     continue;
+                } else if(sepToken instanceof IntToken
+                          && sepToken.getText().charAt(0) == '-') {
+                    // If we hit a negative number, pretend there was a
+                    // plus sign first.
+                    tokensI.previous();
+                    continue;
                 } else {
-                    throw new TokenCompileError("Expected a ']' or '+'", sepToken);
+                    throw new TokenCompileError("Expected a ']', '+', or '-'", sepToken);
                 }
             }
             if(register == null) {

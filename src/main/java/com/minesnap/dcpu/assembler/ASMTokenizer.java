@@ -15,6 +15,13 @@ public class ASMTokenizer {
         return spaces.indexOf(c) != -1;
     }
 
+    // These characters begin new tokens and are included in the new
+    // token.
+    private static final String starters = "-";
+    private static boolean is_starter(char c) {
+        return starters.indexOf(c) != -1;
+    }
+
     // These characters separate tokens and are tokens themselves.
     private static final String borders = "[],+*";
     private static boolean is_border(char c) {
@@ -42,6 +49,11 @@ public class ASMTokenizer {
     public static Token createToken(String s, String sourceFile, int lineNumber)
         throws TokenizeError {
         assert(s.charAt(0) != '"');
+
+        if(s.equals("-")) {
+            throw new TokenizeError("Lone '-' not allowed", sourceFile, lineNumber);
+        }
+
         char c = s.charAt(0);
         if(c == '\'') {
             if(s.charAt(s.length()-1) != '\'') {
@@ -87,20 +99,21 @@ public class ASMTokenizer {
                 return new NameToken(s, sourceFile, lineNumber);
             }
             boolean negative = false;
+            String intpart = s;
             if(c == '-') {
                 negative = true;
-                s = s.substring(1);
+                intpart = intpart.substring(1);
             }
             int value;
             try {
-                if(s.startsWith("0X") || s.startsWith("0H")) {
-                    value = Integer.parseInt(s.substring(2), 16);
-                } else if(s.startsWith("0B")) {
-                    value = Integer.parseInt(s.substring(2), 2);
-                } else if(s.startsWith("0O")) {
-                    value = Integer.parseInt(s.substring(2), 8);
+                if(intpart.startsWith("0X") || intpart.startsWith("0H")) {
+                    value = Integer.parseInt(intpart.substring(2), 16);
+                } else if(intpart.startsWith("0B")) {
+                    value = Integer.parseInt(intpart.substring(2), 2);
+                } else if(intpart.startsWith("0O")) {
+                    value = Integer.parseInt(intpart.substring(2), 8);
                 } else {
-                    value = Integer.parseInt(s, 10);
+                    value = Integer.parseInt(intpart, 10);
                 }
             } catch (NumberFormatException e) {
                 throw new TokenizeError("Invalid integer", sourceFile, lineNumber);
@@ -139,6 +152,7 @@ public class ASMTokenizer {
         List<Token> tokens = new LinkedList<Token>();
         int lineNumber = 1;
         StringBuilder tokenBuilder = new StringBuilder();
+        boolean ignoreNextSpaces = false;
 
         while(true) {
 	    int read = input.read();
@@ -163,12 +177,20 @@ public class ASMTokenizer {
                     }
                 }
             } else if(is_space(c)) {
+                if(!ignoreNextSpaces) {
+                    if(clearBuilder(tokenBuilder, tokens, filename, lineNumber))
+                        tokenBuilder = new StringBuilder();
+                    if(c == '\n') {
+                        tokens.add(new SymbolToken("\n", filename, lineNumber));
+                        lineNumber++;
+                    }
+                }
+            } else if(is_starter(c)) {
                 if(clearBuilder(tokenBuilder, tokens, filename, lineNumber))
                     tokenBuilder = new StringBuilder();
-                if(c == '\n') {
-                    tokens.add(new SymbolToken("\n", filename, lineNumber));
-                    lineNumber++;
-                }
+                // Hack to make "- 5" return a single IntToken of -5
+                ignoreNextSpaces = true;
+                tokenBuilder.append(c);
             } else if(is_border(c)) {
                 if(clearBuilder(tokenBuilder, tokens, filename, lineNumber))
                     tokenBuilder = new StringBuilder();
@@ -217,6 +239,7 @@ public class ASMTokenizer {
                 tokenBuilder = new StringBuilder();
             } else {
                 tokenBuilder.append(c);
+                ignoreNextSpaces = false;
             }
         }
         return tokens;

@@ -1,5 +1,6 @@
 (2012/04/12) - v1.7
 - Added: Support for escape codes like "\n" in strings.
+- Added: Support for subtraction in constant literal expressions.
 
 (2012/04/11) - v1.6
 - Added: Support for constant arithmetic expressions in values.
