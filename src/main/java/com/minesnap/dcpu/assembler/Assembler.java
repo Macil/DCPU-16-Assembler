@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.InputStreamReader;
+import java.io.FileInputStream;
 import java.nio.charset.Charset;
-import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -39,17 +41,26 @@ public class Assembler {
     public void assemble(String filename, String outname)
         throws FileNotFoundException, CompileError, IOException {
         File sourceDir;
-        Scanner sc;
+        Reader in;
         if(filename.equals("-")) {
             sourceDir = new File(".");
-            sc = new Scanner(System.in, "UTF-8");
+            in = new InputStreamReader(System.in, "UTF-8");
         } else {
             File sourcefile = new File(filename);
             sourceDir = sourcefile.getParentFile();
-            sc = new Scanner(sourcefile, "UTF-8");
+            in = new InputStreamReader(new FileInputStream(sourcefile), "UTF-8");
         }
-        List<Token> tokens = ASMTokenizer.tokenize(sc, filename);
-        sc.close();
+        List<Token> tokens;
+	try {
+            tokens = ASMTokenizer.tokenize(in, filename);
+        } finally {
+            in.close();
+        }
+
+        for(Token token : tokens) {
+            System.out.println(token);
+        }
+
         ResolverList resolvables = new ResolverList();
         ListIterator<Token> tokensI = tokens.listIterator();
         boolean newlineRequired = false;
@@ -145,11 +156,9 @@ public class Assembler {
                         isFirst = false;
                     }
                     Token dataToken = tokensI.next();
-                    char firstChar = dataToken.getText().charAt(0);
-                    if(firstChar=='"') {
-                        String full = dataToken.getText();
-                        String quoted = full.substring(1, full.length()-1);
-                        byte[] bytes = quoted.getBytes(Charset.forName("UTF-16LE"));
+                    if(dataToken instanceof StringToken) {
+                        StringToken sdataToken = (StringToken)dataToken;
+                        byte[] bytes = sdataToken.getValue().getBytes(Charset.forName("UTF-16LE"));
                         assert(bytes.length%2 == 0);
                         for(int k=0; k<bytes.length; k+=2) {
                             dataList.add(new UnresolvedData(bytes[k] | (bytes[k+1]<<8)));

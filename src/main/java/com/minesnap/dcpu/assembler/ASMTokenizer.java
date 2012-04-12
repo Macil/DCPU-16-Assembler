@@ -1,8 +1,9 @@
 package com.minesnap.dcpu.assembler;
 
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.LinkedList;
+import java.io.Reader;
+import java.io.IOException;
 import java.lang.StringBuilder;
 
 public class ASMTokenizer {
@@ -22,76 +23,131 @@ public class ASMTokenizer {
         return borders.indexOf(c) != -1;
     }
 
-    public static List<Token> tokenize(Scanner input, String filename) {
-        List<Token> tokens = new ArrayList<Token>();
-        int lineNumber = 1;
-        // Let the Scanner handle file encoding.
-        while(input.hasNextLine()) {
-            String line = input.nextLine();
-            StringBuilder tokenBuilder = null;
-            boolean inDoubleQuotes = false;
-            boolean ignoreNextSymbol = false;
-            for(int i=0; i<line.length(); i++) {
-                char c = line.charAt(i);
-                if(c == '\'' && !ignoreNextSymbol && !inDoubleQuotes) {
-                        if(tokenBuilder != null)
-                            tokens.add(new Token(tokenBuilder.toString(), filename, lineNumber));
-                        tokenBuilder = null;
-                        c = line.charAt(++i);
-                        if(c == '\\') {
-                            c = line.charAt(++i);
-                        }
-                        tokens.add(new Token(Integer.toString((int)c), filename, lineNumber));
-                        c = line.charAt(++i);
-                        assert(c == '\'');
-                        continue;
-                }
-                if(c == '"' && !ignoreNextSymbol) {
-                    if(!inDoubleQuotes) {
-                        if(tokenBuilder != null)
-                            tokens.add(new Token(tokenBuilder.toString(), filename, lineNumber));
-                        tokenBuilder = new StringBuilder();
-                        inDoubleQuotes = true;
-                    } else {
-                        inDoubleQuotes = false;
-                        tokenBuilder.append(c);
-                        tokens.add(new Token(tokenBuilder.toString(), filename, lineNumber));
-                        tokenBuilder = null;
-                        continue;
-                    }
-                }
-                if(c == '\\' && !ignoreNextSymbol) {
-                    ignoreNextSymbol = true;
-                    continue;
-                } else {
-                    ignoreNextSymbol = false;
-                }
-                if(inDoubleQuotes) {
-                    tokenBuilder.append(c);
-                    continue;
-                }
-                if(c == ';')
-                    break;
-                if(is_space(c) || is_border(c)) {
-                    if(tokenBuilder != null) {
-                        tokens.add(new Token(tokenBuilder.toString(), filename, lineNumber));
-                        tokenBuilder = null;
-                    }
-                }
-                if(!is_space(c)) {
-                    if(tokenBuilder==null)
-                        tokenBuilder = new StringBuilder(8);
-                    tokenBuilder.append(c);
-                }
-                if(is_border(c)) {
-                    tokens.add(new Token(tokenBuilder.toString(), filename, lineNumber));
-                    tokenBuilder = null;
-                }
+    public static Token createToken(String s, String sourceFile, int lineNumber) {
+        assert(s.charAt(0) != '"');
+        if(s.charAt(0) == ':' || s.charAt(s.length()-1) == ':') {
+            String name;
+            if(s.charAt(0) == ':') {
+                name = s.substring(1);
+            } else {
+                name = s.substring(0, s.length()-1);
             }
-            if(tokenBuilder != null)
-                tokens.add(new Token(tokenBuilder.toString(), filename, lineNumber));
-            tokens.add(new Token("\n", filename, lineNumber));
-            lineNumber++;
+            return new LabelToken(s, name, sourceFile, lineNumber);
+        }
+        return new Token(s, sourceFile, lineNumber);
+    }
+
+    // Returns true if a token was added
+    private static boolean clearBuilder(StringBuilder builder, List<Token> tokens, String sourceFile, int lineNumber) {
+        if(builder.length() > 0) {
+            tokens.add(createToken(builder.toString(), sourceFile, lineNumber));
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static List<Token> tokenize(Reader input, String filename)
+        throws TokenizeError, IOException {
+        List<Token> tokens = new LinkedList<Token>();
+        int lineNumber = 1;
+        StringBuilder tokenBuilder = new StringBuilder();
+
+        while(true) {
+	    int read = input.read();
+	    if(read == -1) {
+                // EOF
+                if(clearBuilder(tokenBuilder, tokens, filename, lineNumber))
+                    tokenBuilder = new StringBuilder();
+                tokens.add(new SymbolToken("\n", filename, lineNumber));
+                break;
+	    }
+	    char c = (char)read;
+
+	    if(c == ';') {
+                if(clearBuilder(tokenBuilder, tokens, filename, lineNumber))
+                    tokenBuilder = new StringBuilder();
+                while(true) {
+                    read = input.read();
+                    if(read == -1 || read == '\n') {
+                        tokens.add(new SymbolToken("\n", filename, lineNumber));
+                        lineNumber++;
+                        break;
+                    }
+                }
+            } else if(is_space(c)) {
+                if(clearBuilder(tokenBuilder, tokens, filename, lineNumber))
+                    tokenBuilder = new StringBuilder();
+                if(c == '\n') {
+                    tokens.add(new SymbolToken("\n", filename, lineNumber));
+                    lineNumber++;
+                }
+            } else if(is_border(c)) {
+                if(clearBuilder(tokenBuilder, tokens, filename, lineNumber))
+                    tokenBuilder = new StringBuilder();
+                tokens.add(new SymbolToken(Character.toString(c), filename, lineNumber));
+            } else if(c == '"') {
+                if(tokenBuilder.length() != 0) {
+                    throw new TokenizeError("String may not begin inside token", filename, lineNumber);
+                }
+
+                tokenBuilder.append(c);
+
+                int quoteStartLine = lineNumber;
+                boolean nextCharEscaped = false;
+                StringBuilder valueBuilder = new StringBuilder();
+
+                while(true) {
+                    read = input.read();
+                    if(read == -1) {
+                        throw new TokenizeError("Unexpected EOF", filename, lineNumber);
+                    }
+
+                    c = (char)read;
+                    tokenBuilder.append(c);
+                    if(!nextCharEscaped) {
+                        if(c == '"') {
+                            break;
+                        } else if(c == '\n') {
+                            throw new TokenizeError("Unexpected newline (should it be escaped?)", filename, lineNumber);
+                        } else if(c == '\\') {
+                            nextCharEscaped = true;
+                        } else {
+                            valueBuilder.append(c);
+                        }
+                    } else {
+                        nextCharEscaped = false;
+                        switch(c) {
+                        case '\n':
+                            lineNumber++;
+                            // Fall through
+                        case '"':
+                        case '\'':
+                        case '\\':
+                            valueBuilder.append(c);
+                            break;
+                        case 'n':
+                            valueBuilder.append('\n');
+                            break;
+                        case 't':
+                            valueBuilder.append('\t');
+                            break;
+                        case 'r':
+                            valueBuilder.append('\r');
+                            break;
+                        case '0':
+                            valueBuilder.append('\0');
+                            break;
+                        default:
+                            throw new TokenizeError("Unknown escape code", filename, lineNumber);
+                        }
+                    }
+                }
+                tokens.add(new StringToken(tokenBuilder.toString(), valueBuilder.toString(), filename, quoteStartLine));
+                tokenBuilder = new StringBuilder();
+            } else {
+                tokenBuilder.append(c);
+            }
         }
         return tokens;
     }
