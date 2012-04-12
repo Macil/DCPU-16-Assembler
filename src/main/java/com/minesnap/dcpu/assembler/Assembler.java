@@ -17,6 +17,8 @@ public class Assembler {
     private boolean littleEndian = true;
     private boolean optimize = true;
     private Map<String, Integer> newNBOpcodes = null;
+    private ResolverList resolvables = null;
+    private boolean assembled = false;
 
     public Assembler() {
     }
@@ -38,7 +40,7 @@ public class Assembler {
         this.newNBOpcodes = newNBOpcodes;
     }
 
-    public void assemble(String filename, String outname)
+    public void assemble(String filename)
         throws FileNotFoundException, CompileError, IOException {
         File sourceDir;
         Reader in;
@@ -57,7 +59,8 @@ public class Assembler {
             in.close();
         }
 
-        ResolverList resolvables = new ResolverList();
+        assembled = false;
+        resolvables = new ResolverList();
         ListIterator<Token> tokensI = tokens.listIterator();
         boolean newlineRequired = false;
         while(tokensI.hasNext()) {
@@ -252,6 +255,15 @@ public class Assembler {
             }
         }
         resolvables.prepare();
+        assembled = true;
+    }
+
+    public void writeTo(String outname)
+        throws IOException {
+        if(!assembled) {
+            throw new IllegalStateException("assemble method must be called before writeTo");
+        }
+
         WordWriter out;
         if(outname.equals("-")) {
             out = new WordWriter(System.out, littleEndian);

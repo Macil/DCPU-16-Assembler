@@ -93,7 +93,8 @@ public class AssemblerLauncher {
         as.setNewNBOpcodes(newNBOpcodes);
 
         try {
-            as.assemble(filename, outname);
+            as.assemble(filename);
+	    as.writeTo(outname);
         } catch (FileNotFoundException e) {
             System.err.println("Error: Could not find file "+filename);
             System.exit(2);
@@ -104,7 +105,7 @@ public class AssemblerLauncher {
             System.err.println(e);
             System.exit(5);
         }
-        System.out.println("Successfully compiled "+filename+" to "+outname);
+        System.out.println("Successfully assembled "+filename+" to "+outname);
     }
 
     public static void usage() {
