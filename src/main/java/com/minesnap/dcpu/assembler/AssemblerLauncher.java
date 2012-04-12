@@ -16,6 +16,8 @@ public class AssemblerLauncher {
         Map<String, Integer> newNBOpcodes = new HashMap<String, Integer>();
 
         for(int i=0; i<args.length; i++) {
+            if(args[i].length() == 0)
+                continue;
             switch(args[i].charAt(0)) {
             case '-':
                 if(args[i].length() == 1) {
