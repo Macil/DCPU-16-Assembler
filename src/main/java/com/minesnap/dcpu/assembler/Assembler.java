@@ -314,21 +314,37 @@ public class Assembler {
 
     private static UnresolvedData parseLiteralExpression(ListIterator<Token> tokensI)
         throws TokenCompileError {
-        int offset = 0;
-        String labelRef = null;
-
         Token firstToken = tokensI.next();
         tokensI.previous();
 
+        int offset = 0;
+        String labelRef = null;
+        boolean nextIsNegative = false;
         while(true) {
             Token expToken = tokensI.next();
             String expTokenS = expToken.getText();
             if(expToken instanceof SymbolToken) {
-                throw new TokenCompileError("Was not expecting symbol", expToken);
-            }
-            if(expToken instanceof IntToken) {
-                offset += ((IntToken)expToken).getValue();
+                if(expTokenS.equals("-")) {
+                    if(nextIsNegative) {
+                        throw new TokenCompileError("Multiple '-' symbols may not be chained here", expToken);
+                    } else {
+                        nextIsNegative = true;
+                    }
+                    continue;
+                } else {
+                    throw new TokenCompileError("Was not expecting symbol", expToken);
+                }
+            } else if(expToken instanceof IntToken) {
+                int value = ((IntToken)expToken).getValue();
+                if(nextIsNegative) {
+                    value = -value;
+                    nextIsNegative = false;
+                }
+                offset += value;
             } else {
+                if(nextIsNegative) {
+                    throw new TokenCompileError("You can not subtract the value of a label", expToken);
+                }
                 try {
                     ValueType register = ValueType.valueOf(expTokenS);
                     throw new TokenCompileError("Can not add register in literal", expToken);
@@ -349,12 +365,10 @@ public class Assembler {
                 tokensI.previous();
                 break;
             } else if(sepTokenS.equals("+")) {
+                nextIsNegative = false;
                 continue;
-            } else if(sepToken instanceof IntToken
-                      && sepToken.getText().charAt(0) == '-') {
-                // If we hit a negative number, pretend there was a
-                // plus sign first.
-                tokensI.previous();
+            } else if(sepTokenS.equals("-")) {
+                nextIsNegative = true;
                 continue;
             } else {
                 throw new TokenCompileError("Expected a '+', '-', ',' or '\\n'", sepToken);
@@ -396,57 +410,66 @@ public class Assembler {
             int offset = 0;
             ValueType register = null;
             String labelRef = null;
+            boolean nextIsNegative = false;
             while(true) {
                 Token expToken = tokensI.next();
-                String expTokenS = expToken.getText().toUpperCase();
+                String expTokenS = expToken.getText();
+
                 if(expTokenS.equals("\n")) {
                     throw new TokenCompileError("Was not expecting newline", expToken);
-                }
-                if(expToken instanceof IntToken) {
-                    offset += ((IntToken)expToken).getValue();
+                } else if(expToken instanceof IntToken) {
+                    int value = ((IntToken)expToken).getValue();
+                    if(nextIsNegative) {
+                        value = -value;
+                        nextIsNegative = false;
+                    }
+                    offset += value;
+                } else if(expTokenS.equals("+")) {
+                    // if(register == ValueType.SP) {
+                    //     register = ValueType.POP;
+                    // } else {
+                        throw new TokenCompileError("Invalid dereference expression", expToken);
+                    // }
+                } else if(expTokenS.equals("-")) {
+                    if(nextIsNegative) {
+                        throw new TokenCompileError("Multiple '-' symbols may not be chained here", expToken);
+                    } else {
+                        nextIsNegative = true;
+                        continue;
+                    }
                 } else {
                     // This token is either a label or register
                     // name. Note that we can only have up to one
                     // label per deref expression, and we can only
                     // have up to one register per deref expression.
-                    if(expTokenS.equals("--SP")) {
+                    if(nextIsNegative) {
+                        throw new TokenCompileError("You can not subtract the value of a label or register", expToken);
+                    }
+                    try {
+                        ValueType temp = ValueType.valueOf(expTokenS);
                         if(register != null)
-                            throw new TokenCompileError("Invalid dereference expression", expToken);
-                        register = ValueType.PUSH;
-                    } else if(expTokenS.equals("+")) {
-                        if(register == ValueType.SP) {
-                            register = ValueType.POP;
-                        } else {
-                            throw new TokenCompileError("Invalid dereference expression", expToken);
-                        }
-                    } else {
-                        try {
-                            ValueType temp = ValueType.valueOf(expTokenS);
-                            if(register != null)
-                                throw new TokenCompileError("Can not have multiple registers in dereference expression", expToken);
-                            register = temp;
-                        } catch (IllegalArgumentException e) {
-                            // This token is a label and not a register.
-                            if(!ASMTokenizer.is_legal_label(expTokenS))
-                                throw new TokenCompileError("Is not a legal label name", expToken);
-                            if(labelRef != null)
-                                throw new TokenCompileError("Can not have multiple labels in dereference expression", expToken);
-                            labelRef = expTokenS;
-                        }
+                            throw new TokenCompileError("Can not have multiple registers in dereference expression", expToken);
+                        register = temp;
+                    } catch (IllegalArgumentException e) {
+                        // This token is a label and not a register.
+                        if(!ASMTokenizer.is_legal_label(expTokenS))
+                            throw new TokenCompileError("Is not a legal label name", expToken);
+                        if(labelRef != null)
+                            throw new TokenCompileError("Can not have multiple labels in dereference expression", expToken);
+                        labelRef = expTokenS;
                     }
                 }
+
                 // Now we have either a + or ] coming up.
                 Token sepToken = tokensI.next();
                 String sepTokenS = sepToken.getText();
                 if(sepTokenS.equals("]")) {
                     break;
                 } else if(sepTokenS.equals("+")) {
+                    nextIsNegative = false;
                     continue;
-                } else if(sepToken instanceof IntToken
-                          && sepToken.getText().charAt(0) == '-') {
-                    // If we hit a negative number, pretend there was a
-                    // plus sign first.
-                    tokensI.previous();
+                } else if(sepTokenS.equals("-")) {
+                    nextIsNegative = true;
                     continue;
                 } else {
                     throw new TokenCompileError("Expected a ']', '+', or '-'", sepToken);

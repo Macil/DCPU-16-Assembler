@@ -16,15 +16,8 @@ public class ASMTokenizer {
         return spaces.indexOf(c) != -1;
     }
 
-    // These characters begin new tokens and are included in the new
-    // token.
-    private static final String starters = "-";
-    private static boolean is_starter(char c) {
-        return starters.indexOf(c) != -1;
-    }
-
     // These characters separate tokens and are tokens themselves.
-    private static final String borders = "[],+*";
+    private static final String borders = "[],+-*";
     private static boolean is_border(char c) {
         return borders.indexOf(c) != -1;
     }
@@ -95,16 +88,8 @@ public class ASMTokenizer {
             }
             return new LabelToken(s, name, sourceDir, sourceFile, lineNumber);
         }
-        if(c == '-' || is_digit(c)) {
-            if(s.equals("--SP")) {
-                return new NameToken(s, sourceDir, sourceFile, lineNumber);
-            }
-            boolean negative = false;
+        if(is_digit(c)) {
             String intpart = s;
-            if(c == '-') {
-                negative = true;
-                intpart = intpart.substring(1);
-            }
             int value;
             try {
                 if(intpart.startsWith("0X") || intpart.startsWith("0H")) {
@@ -118,9 +103,6 @@ public class ASMTokenizer {
                 }
             } catch (NumberFormatException e) {
                 throw new TokenizeError("Invalid integer", sourceFile, lineNumber);
-            }
-            if(negative) {
-                value = -value;
             }
             return new IntToken(s, value, sourceDir, sourceFile, lineNumber);
         }
@@ -144,7 +126,6 @@ public class ASMTokenizer {
         List<Token> tokens = new LinkedList<Token>();
         int lineNumber = 1;
         StringBuilder tokenBuilder = new StringBuilder();
-        boolean ignoreNextSpaces = false;
 
         while(true) {
 	    int read = input.read();
@@ -169,20 +150,12 @@ public class ASMTokenizer {
                     }
                 }
             } else if(is_space(c)) {
-                if(!ignoreNextSpaces) {
-                    if(clearBuilder(tokenBuilder, tokens, sourceDir, filename, lineNumber))
-                        tokenBuilder = new StringBuilder();
-                    if(c == '\n') {
-                        tokens.add(new SymbolToken("\n", sourceDir, filename, lineNumber));
-                        lineNumber++;
-                    }
-                }
-            } else if(is_starter(c)) {
                 if(clearBuilder(tokenBuilder, tokens, sourceDir, filename, lineNumber))
                     tokenBuilder = new StringBuilder();
-                // Hack to make "- 5" return a single IntToken of -5
-                ignoreNextSpaces = true;
-                tokenBuilder.append(c);
+                if(c == '\n') {
+                    tokens.add(new SymbolToken("\n", sourceDir, filename, lineNumber));
+                    lineNumber++;
+                }
             } else if(is_border(c)) {
                 if(clearBuilder(tokenBuilder, tokens, sourceDir, filename, lineNumber))
                     tokenBuilder = new StringBuilder();
@@ -231,7 +204,6 @@ public class ASMTokenizer {
                 tokenBuilder = new StringBuilder();
             } else {
                 tokenBuilder.append(c);
-                ignoreNextSpaces = false;
             }
         }
         return tokens;
