@@ -23,6 +23,7 @@ public enum OpcodeType {
 
         DAT(null, "DATA", ".DAT", ".DW"),
         JMP,
+        BRA,
         BRK,
         TIMES(null, "DUP"),
         RESERVE(null, ".DS", ".RESERVE"),

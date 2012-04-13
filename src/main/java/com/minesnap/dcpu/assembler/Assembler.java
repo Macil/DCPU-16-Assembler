@@ -187,10 +187,16 @@ public class Assembler {
                 break;
             }
             case JMP:
+            case BRA:
             {
                 UnresolvedData data = parseLiteralExpression(tokensI);
-                JMPInstruction jmp = new JMPInstruction(data, positionIndependent);
-                resolvables.add(jmp);
+                if(positionIndependent || opcode.getType() == OpcodeType.BRA) {
+                    BRAInstruction bra = new BRAInstruction(data);
+                    resolvables.add(bra);
+                } else {
+                    JMPInstruction jmp = new JMPInstruction(data);
+                    resolvables.add(jmp);
+                }
                 break;
             }
             case INCBIN:
@@ -269,11 +275,7 @@ public class Assembler {
                        && instr.getValueA().getType() == ValueType.PC
                        && instr.getValueB().getType() == ValueType.LITERAL) {
                         UnresolvedData data = instr.getValueB().getData();
-                        // Auto-generated JMP instructions are never
-                        // position independent. Only JMP instructions
-                        // which were in the original source are
-                        // eligible for that.
-                        JMPInstruction jmp = new JMPInstruction(data, false);
+                        JMPInstruction jmp = new JMPInstruction(data);
                         resolvables.add(jmp);
                         instr = null;
                     }

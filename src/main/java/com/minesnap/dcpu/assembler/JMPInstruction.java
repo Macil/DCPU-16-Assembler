@@ -6,12 +6,10 @@ import java.util.Map;
 
 public class JMPInstruction implements Resolvable {
     private final UnresolvedData data;
-    private final boolean positionIndependent;
     private Instruction realInstruction = null;
 
-    public JMPInstruction(UnresolvedData data, boolean positionIndependent) {
+    public JMPInstruction(UnresolvedData data) {
         this.data = data;
-        this.positionIndependent = positionIndependent;
     }
 
     public UnresolvedData getData() {
@@ -25,7 +23,6 @@ public class JMPInstruction implements Resolvable {
         throws SymbolLookupError {
         data.evaluateLabels(labelValues, position);
         int dest = data.getUnresolvedWord();
-
 
         int delta = dest - position;
         // Q: If the instruction's size might be 2 words, then why are
@@ -42,18 +39,17 @@ public class JMPInstruction implements Resolvable {
             // Prefer using SET with a short form literal if possible
             // as it takes the fewest cycles. If we can't use the
             // short forms of ADD or SUB, then use SET.
-            if(!positionIndependent &&
-               (dest <= maxliteral || delta > maxliteral || delta < -maxliteral)) {
+            if(dest <= maxliteral || delta > maxliteral || delta < -maxliteral) {
                 realInstruction = new Instruction(Opcode.get(OpcodeType.SET));
                 realInstruction.setValueA(new Value(ValueType.PC));
                 realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(dest)));
             } else if(delta > 0) {
-                assert(positionIndependent || delta <= maxliteral);
+                assert(delta <= maxliteral);
                 realInstruction = new Instruction(Opcode.get(OpcodeType.ADD));
                 realInstruction.setValueA(new Value(ValueType.PC));
                 realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(delta)));
             } else if(delta < 0) {
-                assert(positionIndependent || -delta <= maxliteral);
+                assert(-delta <= maxliteral);
                 realInstruction = new Instruction(Opcode.get(OpcodeType.SUB));
                 realInstruction.setValueA(new Value(ValueType.PC));
                 realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(-delta)));

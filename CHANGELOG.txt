@@ -1,5 +1,7 @@
 (2012/04/13) - v1.9
-- Added: Support for generating position independent code.
+- Added: BRA instruction for making position independent code.
+- Added: --pic option to treat all JMP instructions as BRA
+  instructions.
 
 (2012/04/12) - v1.8
 - Added: Include directive for including source files.

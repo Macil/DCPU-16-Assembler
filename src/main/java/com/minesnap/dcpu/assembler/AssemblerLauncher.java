@@ -128,8 +128,7 @@ public class AssemblerLauncher {
         System.out.println(" -h, --help    Show this help message.");
         System.out.println(" --no-optimizations");
         System.out.println("               Disable automatic optimiziations.");
-        System.out.println(" -p, --pic     Assemble position independent code.");
-        System.out.println("               (Makes all JMP instructions relative.)");
+        System.out.println(" -p, --pic     Treat all JMP instructions as BRA instructions.");
         System.out.println(" -l, --little-endian");
         System.out.println("               Output little endian binaries (default).");
         System.out.println(" -b, --big-endian");
