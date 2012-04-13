@@ -139,13 +139,13 @@ If you got that right, then the following command should work now:
 Running it with no more arguments like that will cause it to show the
 usage instructions. To use it, pass the name of the source file:
 
-    java -jar DCPU16Assembler.jar myprogram.asm
+    java -jar DCPU16Assembler.jar myprogram.dasm16
 
 By default, the compiled binary will be written to a file named
 "a.out". You can specify an output filename by using a second
 argument:
 
-    java -jar DCPU16Assembler.jar myprogram.asm myprogram.bin
+    java -jar DCPU16Assembler.jar myprogram.dasm16 myprogram.bin
 
 Standard input or standard output can be used as the source file or
 output respectively by putting a - instead of a filename.
@@ -163,7 +163,7 @@ DCPU-16 implementations support.
 Custom NB-opcodes may be specified on the command line as follows with
 either the -n or --new-nbopcode arguments:
 
-    java -jar DCPU16Assembler.jar test.asm -n print 17 -n clear 18
+    java -jar DCPU16Assembler.jar test.dasm16 -n print 17 -n clear 18
 
 When those options are used, then "print" can be used in the source
 file just like other NB-opcodes like "jsr". Remember, these custom
