@@ -2,6 +2,7 @@ package com.minesnap.dcpu.assembler;
 
 import java.util.List;
 import java.util.LinkedList;
+import java.io.File;
 import java.io.Reader;
 import java.io.IOException;
 import java.lang.StringBuilder;
@@ -46,7 +47,7 @@ public class ASMTokenizer {
         return true;
     }
 
-    public static Token createToken(String s, String sourceFile, int lineNumber)
+    public static Token createToken(String s, File sourceDir, String sourceFile, int lineNumber)
         throws TokenizeError {
         assert(s.charAt(0) != '"');
 
@@ -77,7 +78,7 @@ public class ASMTokenizer {
                 }
                 value = escaped;
             }
-            return new IntToken(s, value, sourceFile, lineNumber);
+            return new IntToken(s, value, sourceDir, sourceFile, lineNumber);
         }
 
         s = s.toUpperCase();
@@ -92,11 +93,11 @@ public class ASMTokenizer {
             if(!is_legal_label(name)) {
                 throw new TokenizeError("Invalid label name", sourceFile, lineNumber);
             }
-            return new LabelToken(s, name, sourceFile, lineNumber);
+            return new LabelToken(s, name, sourceDir, sourceFile, lineNumber);
         }
         if(c == '-' || is_digit(c)) {
             if(s.equals("--SP")) {
-                return new NameToken(s, sourceFile, lineNumber);
+                return new NameToken(s, sourceDir, sourceFile, lineNumber);
             }
             boolean negative = false;
             String intpart = s;
@@ -130,24 +131,24 @@ public class ASMTokenizer {
                 }
             }
             value &= 0xffff;
-            return new IntToken(s, value, sourceFile, lineNumber);
+            return new IntToken(s, value, sourceDir, sourceFile, lineNumber);
         }
-        return new NameToken(s, sourceFile, lineNumber);
+        return new NameToken(s, sourceDir, sourceFile, lineNumber);
     }
 
     // Returns true if a token was added
     private static boolean clearBuilder(StringBuilder builder, List<Token> tokens,
-                                        String sourceFile, int lineNumber)
+                                        File sourceDir, String sourceFile, int lineNumber)
         throws TokenizeError {
         if(builder.length() > 0) {
-            tokens.add(createToken(builder.toString(), sourceFile, lineNumber));
+            tokens.add(createToken(builder.toString(), sourceDir, sourceFile, lineNumber));
             return true;
         } else {
             return false;
         }
     }
 
-    public static List<Token> tokenize(Reader input, String filename)
+    public static List<Token> tokenize(Reader input, File sourceDir, String filename)
         throws TokenizeError, IOException {
         List<Token> tokens = new LinkedList<Token>();
         int lineNumber = 1;
@@ -158,43 +159,43 @@ public class ASMTokenizer {
 	    int read = input.read();
 	    if(read == -1) {
                 // EOF
-                if(clearBuilder(tokenBuilder, tokens, filename, lineNumber))
+                if(clearBuilder(tokenBuilder, tokens, sourceDir, filename, lineNumber))
                     tokenBuilder = new StringBuilder();
-                tokens.add(new SymbolToken("\n", filename, lineNumber));
+                tokens.add(new SymbolToken("\n", sourceDir, filename, lineNumber));
                 break;
 	    }
 	    char c = (char)read;
 
 	    if(c == ';') {
-                if(clearBuilder(tokenBuilder, tokens, filename, lineNumber))
+                if(clearBuilder(tokenBuilder, tokens, sourceDir, filename, lineNumber))
                     tokenBuilder = new StringBuilder();
                 while(true) {
                     read = input.read();
                     if(read == -1 || read == '\n') {
-                        tokens.add(new SymbolToken("\n", filename, lineNumber));
+                        tokens.add(new SymbolToken("\n", sourceDir, filename, lineNumber));
                         lineNumber++;
                         break;
                     }
                 }
             } else if(is_space(c)) {
                 if(!ignoreNextSpaces) {
-                    if(clearBuilder(tokenBuilder, tokens, filename, lineNumber))
+                    if(clearBuilder(tokenBuilder, tokens, sourceDir, filename, lineNumber))
                         tokenBuilder = new StringBuilder();
                     if(c == '\n') {
-                        tokens.add(new SymbolToken("\n", filename, lineNumber));
+                        tokens.add(new SymbolToken("\n", sourceDir, filename, lineNumber));
                         lineNumber++;
                     }
                 }
             } else if(is_starter(c)) {
-                if(clearBuilder(tokenBuilder, tokens, filename, lineNumber))
+                if(clearBuilder(tokenBuilder, tokens, sourceDir, filename, lineNumber))
                     tokenBuilder = new StringBuilder();
                 // Hack to make "- 5" return a single IntToken of -5
                 ignoreNextSpaces = true;
                 tokenBuilder.append(c);
             } else if(is_border(c)) {
-                if(clearBuilder(tokenBuilder, tokens, filename, lineNumber))
+                if(clearBuilder(tokenBuilder, tokens, sourceDir, filename, lineNumber))
                     tokenBuilder = new StringBuilder();
-                tokens.add(new SymbolToken(Character.toString(c), filename, lineNumber));
+                tokens.add(new SymbolToken(Character.toString(c), sourceDir, filename, lineNumber));
             } else if(c == '"') {
                 if(tokenBuilder.length() != 0) {
                     throw new TokenizeError("String may not begin inside token", filename, lineNumber);
@@ -235,7 +236,7 @@ public class ASMTokenizer {
                         valueBuilder.append(value);
                     }
                 }
-                tokens.add(new StringToken(tokenBuilder.toString(), valueBuilder.toString(), filename, quoteStartLine));
+                tokens.add(new StringToken(tokenBuilder.toString(), valueBuilder.toString(), sourceDir, filename, quoteStartLine));
                 tokenBuilder = new StringBuilder();
             } else {
                 tokenBuilder.append(c);

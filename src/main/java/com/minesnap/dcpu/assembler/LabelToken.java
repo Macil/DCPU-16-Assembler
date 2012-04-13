@@ -1,11 +1,13 @@
 package com.minesnap.dcpu.assembler;
 
+import java.io.File;
+
 public class LabelToken extends Token {
     private final String name;
 
     public LabelToken(String text, String name,
-                       String sourceFile, int lineNumber) {
-        super(text, sourceFile, lineNumber);
+                      File sourceDir, String sourceFile, int lineNumber) {
+        super(text, sourceDir, sourceFile, lineNumber);
         this.name = name;
     }
 

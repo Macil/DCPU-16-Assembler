@@ -54,7 +54,7 @@ public class Assembler {
         }
         List<Token> tokens;
 	try {
-            tokens = ASMTokenizer.tokenize(in, filename);
+            tokens = ASMTokenizer.tokenize(in, sourceDir, filename);
         } finally {
             in.close();
         }
@@ -223,6 +223,10 @@ public class Assembler {
                     throw new TokenCompileError(e.getMessage(), incfilenameToken);
                 }
                 break;
+            }
+            case INCLUDE:
+            {
+                throw new UnsupportedOperationException("Include directive not supported yet");
             }
             default:
             {

@@ -27,6 +27,7 @@ public enum OpcodeType {
         TIMES(null, "DUP"),
         RESERVE(null, ".DS", ".RESERVE"),
         INCBIN(null, ".INCBIN"),
+        INCLUDE(null, ".INCLUDE"),
 
         JSR(0x10),
 
