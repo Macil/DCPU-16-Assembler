@@ -102,7 +102,7 @@ public class ResolverList {
     }
 
     private void evaluateRefs()
-        throws SymbolLookupError {
+        throws TokenCompileError {
         Map<String, Integer> labelValues = getLabelValues();
 
         boolean needDoOver = false;
@@ -134,7 +134,7 @@ public class ResolverList {
     }
 
     public void prepare()
-        throws SymbolLookupError {
+        throws TokenCompileError {
         evaluateRefs();
         prepared = true;
     }

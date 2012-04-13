@@ -122,15 +122,6 @@ public class ASMTokenizer {
             if(negative) {
                 value = -value;
             }
-            int hibyte = value & 0xffff0000;
-            if(hibyte != 0) {
-                // We need to make sure that number isn't just negative
-                // and within bounds.
-                if(hibyte != 0xffff0000 || (value & 0x8000) != 0x8000) {
-                    throw new TokenizeError("Number can't fit in two byte word", sourceFile, lineNumber);
-                }
-            }
-            value &= 0xffff;
             return new IntToken(s, value, sourceDir, sourceFile, lineNumber);
         }
         return new NameToken(s, sourceDir, sourceFile, lineNumber);

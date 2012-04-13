@@ -25,7 +25,7 @@ public class UnresolvedMultiData implements Resolvable {
 
     @Override
     public void evaluateLabels(Map<String, Integer> labelValues, int position)
-        throws SymbolLookupError {
+        throws TokenCompileError {
         lastKnownWordCount = 0;
         for(UnresolvedData data : dataList) {
             data.evaluateLabels(labelValues, position+lastKnownWordCount);

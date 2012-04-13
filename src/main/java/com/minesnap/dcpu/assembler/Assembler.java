@@ -114,7 +114,7 @@ public class Assembler {
                 }
 
                 List<UnresolvedData> dataList = new ArrayList<UnresolvedData>(1);
-                dataList.add(new UnresolvedData(0));
+                dataList.add(new UnresolvedData(null, 0));
                 resolvables.add(new UnresolvedMultiData(dataList, count));
 
                 break;
@@ -165,7 +165,7 @@ public class Assembler {
                         byte[] bytes = sdataToken.getValue().getBytes(Charset.forName("UTF-16LE"));
                         assert(bytes.length%2 == 0);
                         for(int k=0; k<bytes.length; k+=2) {
-                            dataList.add(new UnresolvedData(bytes[k] | (bytes[k+1]<<8)));
+                            dataList.add(new UnresolvedData(dataToken, bytes[k] | (bytes[k+1]<<8)));
                         }
                     } else {
                         tokensI.previous();
@@ -182,7 +182,7 @@ public class Assembler {
                 // Replace BRK with SUB PC, 1
                 Instruction instr = new Instruction(Opcode.get(OpcodeType.SUB));
                 instr.setValueA(new Value(ValueType.PC));
-                instr.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(1)));
+                instr.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(null, 1)));
                 resolvables.add(instr);
                 break;
             }
@@ -317,6 +317,9 @@ public class Assembler {
         int offset = 0;
         String labelRef = null;
 
+        Token firstToken = tokensI.next();
+        tokensI.previous();
+
         while(true) {
             Token expToken = tokensI.next();
             String expTokenS = expToken.getText();
@@ -358,9 +361,10 @@ public class Assembler {
             }
         }
         if(labelRef == null) {
-            return new UnresolvedData(offset);
+            checkIntWordRange(firstToken, offset);
+            return new UnresolvedData(firstToken, offset & 0xffff);
         } else {
-            return new UnresolvedOffset(labelRef, offset);
+            return new UnresolvedOffset(firstToken, labelRef, offset);
         }
     }
 
@@ -450,9 +454,10 @@ public class Assembler {
             }
             if(register == null) {
                 if(labelRef == null) {
-                    return new Value(ValueType.DN, new UnresolvedData(offset));
+                    checkIntWordRange(first, offset);
+                    return new Value(ValueType.DN, new UnresolvedData(first, offset & 0xffff));
                 } else {
-                    return new Value(ValueType.DN, new UnresolvedOffset(labelRef, offset));
+                    return new Value(ValueType.DN, new UnresolvedOffset(first, labelRef, offset));
                 }
             } else {
                 if(register == ValueType.POP || register == ValueType.PUSH) {
@@ -469,12 +474,21 @@ public class Assembler {
                     register = register.dereferenceNextPlus();
                     if(labelRef == null) {
                         assert(offset != 0);
-                        return new Value(register, new UnresolvedData(offset));
+                        checkIntWordRange(first, offset);
+                        return new Value(register, new UnresolvedData(first, offset & 0xffff));
                     } else {
-                        return new Value(register, new UnresolvedOffset(labelRef, offset));
+                        return new Value(register, new UnresolvedOffset(first, labelRef, offset));
                     }
                 }
             }
+        }
+    }
+
+    private static void checkIntWordRange(Token token, int value)
+        throws TokenCompileError {
+        if((value >= 0 && (value & 0xffff0000) != 0)
+           || (value < 0 && (value & 0xffff8000) != 0xffff8000)) {
+            throw new TokenCompileError("Value can not fit in 16 bits", token);
         }
     }
 }

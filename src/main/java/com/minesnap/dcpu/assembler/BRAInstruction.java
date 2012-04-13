@@ -20,7 +20,7 @@ public class BRAInstruction implements Resolvable {
 
     @Override
     public void evaluateLabels(Map<String, Integer> labelValues, int position)
-        throws SymbolLookupError {
+        throws TokenCompileError {
         data.evaluateLabels(labelValues, position);
         int dest = data.getUnresolvedWord();
 
@@ -34,11 +34,11 @@ public class BRAInstruction implements Resolvable {
         if(delta > 0) {
             realInstruction = new Instruction(Opcode.get(OpcodeType.ADD));
             realInstruction.setValueA(new Value(ValueType.PC));
-            realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(delta)));
+            realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(null, delta)));
         } else if(delta < 0) {
             realInstruction = new Instruction(Opcode.get(OpcodeType.SUB));
             realInstruction.setValueA(new Value(ValueType.PC));
-            realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(-delta)));
+            realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(null, -delta)));
         } else /* if(delta == 0) */ {
             // JMP to the next instruction is NOP so don't do
             // anything.

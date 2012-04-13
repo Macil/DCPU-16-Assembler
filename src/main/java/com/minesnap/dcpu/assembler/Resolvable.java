@@ -6,7 +6,7 @@ import java.util.Map;
 
 public interface Resolvable {
     public void evaluateLabels(Map<String, Integer> labelValues, int position)
-        throws SymbolLookupError;
+        throws TokenCompileError;
     public int wordCount();
     public void writeTo(WordWriter out)
         throws IOException;

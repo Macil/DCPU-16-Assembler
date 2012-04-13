@@ -1,7 +1,7 @@
 package com.minesnap.dcpu.assembler;
 
-public class SymbolLookupError extends CompileError {
-    public SymbolLookupError(String symbol) {
-        super("Could not find symbol: "+symbol);
+public class SymbolLookupError extends TokenCompileError {
+    public SymbolLookupError(String symbol, Token token) {
+        super("Could not find symbol "+symbol, token);
     }
 }
