@@ -13,8 +13,8 @@ cycles than binaries produced by other assemblers given the same
 source assembly.
 
 This assembler also supports the DAT/DATA, BRK, JMP, RESERVE/.DS,
-TIMES/DUP, and .INCBIN meta-instructions that work on all DCPU-16
-implementations, and it allows the user to specify custom new
+TIMES/DUP, .INCBIN, and .INCLUDE meta-instructions that work on all
+DCPU-16 implementations, and it allows the user to specify custom new
 non-basic opcode instructions for use with supporting DCPU-16
 implementations.
 
@@ -68,6 +68,11 @@ endian form. If the file is included in the same endian form that the
 source file is being compiled to, then the contents of the file will
 exactly match what is written into the final binary. Example usage:
 `.incbin "some file.bin" le`
+
+The .INCLUDE instruction is followed by a quoted filename of an
+assembly file to include at this location. The source will be read as
+if the included file's source was where the .INCLUDE instruction was
+to begin with. Example usage: `.include "otherfile.dasm16"`
 
 Custom NB-Opcodes
 -----------------
