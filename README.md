@@ -141,11 +141,12 @@ usage instructions. To use it, pass the name of the source file:
 
     java -jar DCPU16Assembler.jar myprogram.dasm16
 
-By default, the compiled binary will be written to a file named
-"a.out". You can specify an output filename by using a second
-argument:
+By default, if the source file's name ends in ".dasm16", then compiled
+binary will be written to a file with the ".dcpu16" file extension.
+Otherwise, it will be written to a file named "a.out". You can specify
+an output filename by using a second argument:
 
-    java -jar DCPU16Assembler.jar myprogram.dasm16 myprogram.bin
+    java -jar DCPU16Assembler.jar myprogram.dasm16 other.dcpu16
 
 Standard input or standard output can be used as the source file or
 output respectively by putting a - instead of a filename.

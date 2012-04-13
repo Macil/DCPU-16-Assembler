@@ -1,5 +1,8 @@
 (2012/04/12) - v1.8
 - Added: Include directive for including source files.
+- Added: If the input filename ends with ".dasm16", then the output
+  filename will be the same except with the ".dcpu16" extension
+  instead of being named "a.out".
 
 (2012/04/12) - v1.7
 - Added: Support for escape codes like "\n" in strings.

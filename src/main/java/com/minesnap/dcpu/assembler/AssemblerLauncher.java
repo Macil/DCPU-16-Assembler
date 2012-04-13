@@ -82,10 +82,17 @@ public class AssemblerLauncher {
 
         String filename = argsList.get(0);
         String outname;
-        if(argsList.size() < 2)
-            outname = "a.out";
-        else
+        if(argsList.size() < 2) {
+            if(filename.endsWith(".dasm16")) {
+                outname = filename.substring(0,filename.length()-7)+".dcpu16";
+            } else if(filename.endsWith(".dasm")) {
+                outname = filename.substring(0,filename.length()-5)+".dcpu";
+            } else {
+                outname = "a.out";
+            }
+	} else {
             outname = argsList.get(1);
+        }
 
         Assembler as = new Assembler();
         as.setLittleEndian(littleEndian);
