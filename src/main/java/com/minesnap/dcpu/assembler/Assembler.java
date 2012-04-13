@@ -16,6 +16,7 @@ import java.util.ListIterator;
 public class Assembler {
     private boolean littleEndian = true;
     private boolean optimize = true;
+    private boolean positionIndependent = false;
     private Map<String, Integer> newNBOpcodes = null;
     private ResolverList resolvables = null;
     private boolean assembled = false;
@@ -29,6 +30,10 @@ public class Assembler {
 
     public void setOptimizations(boolean optimize) {
         this.optimize = optimize;
+    }
+
+    public void setPositionIndependent(boolean positionIndependent) {
+        this.positionIndependent = positionIndependent;
     }
 
     public void setNewNBOpcodes(Map<String, Integer> newNBOpcodes) {
@@ -184,7 +189,7 @@ public class Assembler {
             case JMP:
             {
                 UnresolvedData data = parseLiteralExpression(tokensI);
-                JMPInstruction jmp = new JMPInstruction(data);
+                JMPInstruction jmp = new JMPInstruction(data, positionIndependent);
                 resolvables.add(jmp);
                 break;
             }
@@ -264,7 +269,11 @@ public class Assembler {
                        && instr.getValueA().getType() == ValueType.PC
                        && instr.getValueB().getType() == ValueType.LITERAL) {
                         UnresolvedData data = instr.getValueB().getData();
-                        JMPInstruction jmp = new JMPInstruction(data);
+                        // Auto-generated JMP instructions are never
+                        // position independent. Only JMP instructions
+                        // which were in the original source are
+                        // eligible for that.
+                        JMPInstruction jmp = new JMPInstruction(data, false);
                         resolvables.add(jmp);
                         instr = null;
                     }

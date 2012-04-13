@@ -12,6 +12,7 @@ public class AssemblerLauncher {
         boolean endianDecided = false;
         boolean littleEndian = true;
         boolean optimize = true;
+        boolean positionIndependent = false;
         List<String> argsList = new ArrayList<String>(2);
         Map<String, Integer> newNBOpcodes = new HashMap<String, Integer>();
 
@@ -28,6 +29,8 @@ public class AssemblerLauncher {
                     return;
                 } else if(args[i].equals("--no-optimizations")) {
                     optimize = false;
+                } else if(args[i].equals("-p") || args[i].equals("--pic")) {
+                    positionIndependent = true;
                 } else if(args[i].equals("-b") || args[i].equals("--big-endian")) {
                     if(endianDecided) {
                         System.err.println("Error: You can't specify multiple endian types.");
@@ -97,6 +100,7 @@ public class AssemblerLauncher {
         Assembler as = new Assembler();
         as.setLittleEndian(littleEndian);
         as.setOptimizations(optimize);
+        as.setPositionIndependent(positionIndependent);
         as.setNewNBOpcodes(newNBOpcodes);
 
         try {
@@ -124,6 +128,8 @@ public class AssemblerLauncher {
         System.out.println(" -h, --help    Show this help message.");
         System.out.println(" --no-optimizations");
         System.out.println("               Disable automatic optimiziations.");
+        System.out.println(" -p, --pic     Assemble position independent code.");
+        System.out.println("               (Makes all JMP instructions relative.)");
         System.out.println(" -l, --little-endian");
         System.out.println("               Output little endian binaries (default).");
         System.out.println(" -b, --big-endian");

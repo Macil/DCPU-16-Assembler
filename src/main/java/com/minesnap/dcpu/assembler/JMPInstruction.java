@@ -6,10 +6,12 @@ import java.util.Map;
 
 public class JMPInstruction implements Resolvable {
     private final UnresolvedData data;
+    private final boolean positionIndependent;
     private Instruction realInstruction = null;
 
-    public JMPInstruction(UnresolvedData data) {
+    public JMPInstruction(UnresolvedData data, boolean positionIndependent) {
         this.data = data;
+        this.positionIndependent = positionIndependent;
     }
 
     public UnresolvedData getData() {
@@ -23,7 +25,14 @@ public class JMPInstruction implements Resolvable {
         throws SymbolLookupError {
         data.evaluateLabels(labelValues, position);
         int dest = data.getUnresolvedWord();
-        int delta = dest - (position+wordCount());
+
+
+        int delta = dest - position;
+        // Q: If the instruction's size might be 2 words, then why are
+        // we only correcting by 1 word? A: The first operand, PC, is
+        // read before the second word causes PC to increment.
+        if(realInstruction != null)
+            delta--;
 
         if(delta == 0) {
             // JMP to the next instruction is NOP so don't do
@@ -33,17 +42,18 @@ public class JMPInstruction implements Resolvable {
             // Prefer using SET with a short form literal if possible
             // as it takes the fewest cycles. If we can't use the
             // short forms of ADD or SUB, then use SET.
-            if(dest <= maxliteral || delta > maxliteral || delta < -maxliteral) {
+            if(!positionIndependent &&
+               (dest <= maxliteral || delta > maxliteral || delta < -maxliteral)) {
                 realInstruction = new Instruction(Opcode.get(OpcodeType.SET));
                 realInstruction.setValueA(new Value(ValueType.PC));
                 realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(dest)));
             } else if(delta > 0) {
-                assert(delta <= maxliteral);
+                assert(positionIndependent || delta <= maxliteral);
                 realInstruction = new Instruction(Opcode.get(OpcodeType.ADD));
                 realInstruction.setValueA(new Value(ValueType.PC));
                 realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(delta)));
             } else if(delta < 0) {
-                assert(-delta <= maxliteral);
+                assert(positionIndependent || -delta <= maxliteral);
                 realInstruction = new Instruction(Opcode.get(OpcodeType.SUB));
                 realInstruction.setValueA(new Value(ValueType.PC));
                 realInstruction.setValueB(new Value(ValueType.LITERAL, new UnresolvedData(-delta)));

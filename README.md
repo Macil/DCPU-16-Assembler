@@ -7,10 +7,10 @@ http://0x10c.com/doc/dcpu-16.txt
 
 This assembler correctly supports short form labels, and it
 automatically optimizes jump calls (`SET PC, value`) to shorter
-instructions if possible. This means that the compiled binaries that
-this assembler produces are often slightly smaller and run in fewer
-cycles than binaries produced by other assemblers given the same
-source assembly.
+instructions if possible by default. This means that the compiled
+binaries that this assembler produces are often slightly smaller and
+run in fewer cycles than binaries produced by other assemblers given
+the same source assembly.
 
 This assembler also supports the DAT/DATA, BRK, JMP, RESERVE/.DS,
 TIMES/DUP, .INCBIN, and .INCLUDE meta-instructions that work on all
@@ -47,7 +47,9 @@ automatically be replaced by `ADD PC, delta` or `SUB PC, delta` if it
 is found that those instructions would be shorter. If optimizations
 are enabled (which they are by default), then all eligible uses of
 `SET PC, value` in the source file will also be considered for this
-optimization.
+optimization. If generating position independent code is enabled (off
+by default), then JMP instructions will only be compiled to ADD or SUB
+instructions.
 
 The RESERVE or .DS instruction takes one integer argument specifying
 how many words of zeroes to reserve in memory at its location. `.DS 3`
@@ -154,6 +156,12 @@ output respectively by putting a - instead of a filename.
 The -h/--help option can be given to show the usage instructions and
 list of options, and the --no-optimizations option can be given to
 disable all automatic optimizations while compiling.
+
+The -p/--pic option can be passed to enable generating
+position-independent code. This changes JMP instructions to only be
+compiled to `ADD PC, delta` or `SUB PC, delta` instructions, so that
+the binary can be loaded at any address and executed from there. (This
+setting does not affect `SET PC, value` instructions!)
 
 This assembler support writing its binaries in both little endian and
 big endian format. The assembler defaults to little endian format. The
