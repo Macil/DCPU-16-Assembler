@@ -94,9 +94,9 @@ public class AssemblerLauncher {
 
         try {
             as.assemble(filename);
-	    as.writeTo(outname);
+            as.writeTo(outname);
         } catch (FileNotFoundException e) {
-            System.err.println("Error: Could not find file "+filename);
+            System.err.println("Error: "+e.getMessage());
             System.exit(2);
         } catch (CompileError e) {
             System.err.println("Compile Error: "+e.getMessage());
