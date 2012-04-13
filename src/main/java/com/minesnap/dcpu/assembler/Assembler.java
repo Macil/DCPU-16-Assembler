@@ -425,14 +425,27 @@ public class Assembler {
                     }
                     offset += value;
                 } else if(expTokenS.equals("+")) {
-                    // if(register == ValueType.SP) {
-                    //     register = ValueType.POP;
-                    // } else {
+                    if(register == ValueType.SP) {
+                        register = ValueType.POP;
+                    } else {
                         throw new TokenCompileError("Invalid dereference expression", expToken);
-                    // }
+                    }
                 } else if(expTokenS.equals("-")) {
                     if(nextIsNegative) {
-                        throw new TokenCompileError("Multiple '-' symbols may not be chained here", expToken);
+                        // We have two '-' symbols in a row. This is only legal if it precedes "SP".
+                        if(register != null)
+                            throw new TokenCompileError("Invalid dereference expression", expToken);
+
+                        expToken = tokensI.next();
+                        expTokenS = expToken.getText();
+                        try {
+                            register = ValueType.valueOf(expTokenS);
+                        } catch (IllegalArgumentException e) {
+                            throw new TokenCompileError("Multiple '-' symbols may not be chained here", expToken);
+                        }
+                        if(register != ValueType.SP)
+                            throw new TokenCompileError("Can not decrement non-SP register", expToken);
+                        register = ValueType.PUSH;
                     } else {
                         nextIsNegative = true;
                         continue;
