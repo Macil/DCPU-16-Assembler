@@ -195,7 +195,7 @@ public class Assembler {
                     throw new TokenCompileError("Expected string for filename", incfilenameToken);
                 }
                 String incfilename = ((StringToken)incfilenameToken).getValue();
-                File incfile = new File(sourceDir, incfilename);
+                File incfile = new File(incfilenameToken.getSourceDir(), incfilename);
 
                 Token typeToken = tokensI.next();
                 String typeS = typeToken.getText();
@@ -226,7 +226,27 @@ public class Assembler {
             }
             case INCLUDE:
             {
-                throw new UnsupportedOperationException("Include directive not supported yet");
+                Token incfilenameToken = tokensI.next();
+                if(!(incfilenameToken instanceof StringToken)) {
+                    throw new TokenCompileError("Expected string for filename", incfilenameToken);
+                }
+                String incfilename = ((StringToken)incfilenameToken).getValue();
+                File incfile = new File(incfilenameToken.getSourceDir(), incfilename);
+
+                Reader incIn = new InputStreamReader(new FileInputStream(incfile), "UTF-8");
+                List<Token> incTokens;
+                try {
+                    incTokens = ASMTokenizer.tokenize(incIn, incfile.getParentFile(), incfile.getName());
+                } finally {
+                    incIn.close();
+                }
+                // Add the included tokens after what should be the
+                // newline following this directive.
+                tokens.addAll(tokensI.nextIndex()+1, incTokens);
+                // Reset the tokensI iterator or else it will complain
+                // about a concurrent modification.
+                tokensI = tokens.listIterator(tokensI.nextIndex());
+                break;
             }
             default:
             {
