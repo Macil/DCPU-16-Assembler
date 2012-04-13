@@ -38,21 +38,22 @@ The DAT or DATA instruction is followed by data to put directly in the
 compiled binary. This data is a comma-delimited list of strings,
 characters, integers, and address labels.
 
-The BRK instruction signals for the program to end. Currently this
-compiles to the same code that `SUB PC, 1` does.
+The BRK instruction (break) signals for the program to end. Currently
+this compiles to the same code that `SUB PC, 1` does.
 
-The JMP instruction takes one argument: a label or address to jump
-to. It is equivalent to using `SET PC, value`, except that it will
-automatically be replaced by `ADD PC, delta` or `SUB PC, delta` if it
-is found that those instructions would be shorter. If optimizations
-are enabled (which they are by default), then all eligible uses of
-`SET PC, value` in the source file will also be considered for this
-optimization.
+The JMP instruction (jump) takes one argument: a label or address to
+jump to. It is equivalent to using `SET PC, value`, except that it
+will automatically be replaced by `ADD PC, delta` or `SUB PC, delta`
+if it is found that those instructions would be shorter. If
+optimizations are enabled (which they are by default), then all
+eligible uses of `SET PC, value` in the source file will also be
+considered for this optimization.
 
-The BRA instruction is like the JMP instruction, except it only ever
-compiles to the `ADD PC, delta` or `SUB PC, delta` forms. This
-instruction is used for making position independent code such that the
-binary can be loaded into any address and executed from there.
+The BRA instruction (relative branch) is like the JMP instruction,
+except it only ever compiles to the `ADD PC, delta` or `SUB PC, delta`
+forms. This instruction is used for making position independent code
+such that the binary can be loaded into any address and executed from
+there.
 
 The RESERVE or .DS instruction takes one integer argument specifying
 how many words of zeroes to reserve in memory at its location. `.DS 3`
@@ -62,17 +63,18 @@ The TIMES or DUP instruction can be used immediately before a DAT
 instruction with a number that tells how many times to repeat the DAT
 instruction. `TIMES 3 DAT 5` is equivalent to `DAT 5, 5, 5`.
 
-The .INCBIN instruction is followed by a quoted filename of a file to
-include into the compiled binary at this location. The given pathname
-must be relative to the source file's path. It is then followed by an
-optional endianness specifier, "THIS" (default), "LE", or "BE". "THIS"
-specifies that the included file should be read in the same endianness
-that this source file is being compiled to, "LE" means it should be
-read in little endian form, and "BE" means it should be read in big
-endian form. If the file is included in the same endian form that the
-source file is being compiled to, then the contents of the file will
-exactly match what is written into the final binary. Example usage:
-`.incbin "some file.bin" le`
+The .INCBIN instruction (include binary) is followed by a quoted
+filename of a file to include into the compiled binary at this
+location. The given pathname must be relative to the source file's
+path. It is then followed by an optional endianness specifier, "THIS"
+(default), "LE", or "BE". "THIS" specifies that the included file
+should be read in the same endianness that this source file is being
+compiled to, "LE" means it should be read in little endian form, and
+"BE" means it should be read in big endian form. If the file is
+included in the same endian form that the source file is being
+compiled to, then the contents of the file will exactly match what is
+written into the final binary. Example usage: `.incbin "some file.bin"
+le`
 
 The .INCLUDE instruction is followed by a quoted filename of an
 assembly file to include at this location. The source will be read as
