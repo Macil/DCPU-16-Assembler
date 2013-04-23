@@ -2,8 +2,8 @@ DCPU 16 Assembler
 =================
 
 This is an assembler for the DCPU-16 architecture as designed by
-Notch. This implements version 1.1 of the standard available at
-http://0x10c.com/doc/dcpu-16.txt
+Notch. This implements version 1.1 of the DCPU-16 standard. A copy of
+that standard is available in [dcpu-16-v1.1.txt](dcpu-16-v1.1.txt).
 
 This assembler correctly supports short form labels, and it
 automatically optimizes jump calls (`SET PC, value`) to shorter
